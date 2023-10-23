@@ -1,0 +1,17 @@
+# 4 CH Relay
+switch:
+  - platform: gpio
+    name: "Switch 1"
+    pin: 25
+
+  - platform: gpio
+    name: "Switch 2"
+    pin: 26
+    
+  - platform: gpio
+    name: "Switch 3"
+    pin: 33
+    
+  - platform: gpio
+    name: "Switch 4"
+    pin: 32
