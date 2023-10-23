@@ -6,12 +6,12 @@ switch:
 
   - platform: gpio
     name: "Switch 2"
-    pin: 26
-    
-  - platform: gpio
-    name: "Switch 3"
     pin: 33
     
   - platform: gpio
-    name: "Switch 4"
+    name: "Switch 3"
     pin: 32
+    
+  - platform: gpio
+    name: "Switch 4"
+    pin: 23
