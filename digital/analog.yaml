@@ -1,5 +1,45 @@
-sensor:
+  
+calibate
   - platform: adc
     pin: 35
-    name: "Analog SoilMoisture"
-    update_interval: 10s
+    attenuation: auto
+    name: "Soil Moisture 1"
+    unit_of_measurement: "%"
+    device_class: humidity
+    icon: "mdi:watering-can"
+    filters:
+      - calibrate_linear:
+          - 2.89 -> 0
+          - 1.46 -> 100
+    update_interval: 20s
+    accuracy_decimals: 0
+
+  - platform: adc
+    pin: 35
+    attenuation: auto
+    name: "Soil Voltage 1"
+    unit_of_measurement: "V"
+    device_class: voltage
+    update_interval: 20s
+    accuracy_decimals: 2
+
+
+- platform: adc
+    pin: 35
+    
+    filters:
+      - lambda: |-
+          if (x > 3.15) {
+            return 0;
+          } else if (x < 1.30) {
+            return 100;
+          } else {
+            return (3.15-x) / (3.15-1.30) * 100.0;
+          }
+    name: "Soil Moisture Level"
+    unit_of_measurement: "%"
+    device_class: humidity
+    icon: "mdi:watering-can"
+    update_interval: 2s
+    attenuation: auto
+    accuracy_decimals: 0
