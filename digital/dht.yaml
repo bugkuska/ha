@@ -1,9 +1,26 @@
-#Digital/Analog Sensor  
+# 4 CH Relay
+switch:
+  - platform: gpio
+    name: "Switch 1"
+    pin: 25
+
+  - platform: gpio
+    name: "Switch 2"
+    pin: 33
+    
+  - platform: gpio
+    name: "Switch 3"
+    pin: 32
+    
+  - platform: gpio
+    name: "Switch 4"
+    pin: 23
+# Digital Sensor
 sensor:
   - platform: dht
     pin: 18
     temperature:
-      name: "Living Room Temperature"
+      name: "DHT11/DHT22 Temperature"
     humidity:
-      name: "Living Room Humidity"
+      name: "DHT11/DHT22 Humidity"
     update_interval: 10s
