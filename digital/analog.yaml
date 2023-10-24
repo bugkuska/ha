@@ -1,5 +1,5 @@
   
-calibate
+############################calibate###########################
   - platform: adc
     pin: 35
     attenuation: auto
@@ -22,9 +22,39 @@ calibate
     device_class: voltage
     update_interval: 20s
     accuracy_decimals: 2
+############################calibate###########################
 
 
-- platform: adc
+# 4 CH Relay
+switch:
+  - platform: gpio
+    name: "Switch 1"
+    pin: 25
+
+  - platform: gpio
+    name: "Switch 2"
+    pin: 33
+    
+  - platform: gpio
+    name: "Switch 3"
+    pin: 32
+    
+  - platform: gpio
+    name: "Switch 4"
+    pin: 23
+# Digital & Analog Sensor
+sensor:
+  #DHT11/DHT22
+  - platform: dht
+    pin: 18
+    temperature:
+      name: "DHT11/DHT22 Temperature"
+    humidity:
+      name: "DHT11/DHT22 Humidity"
+    update_interval: 10s
+  
+  #SoilMoisture Sensor
+  - platform: adc
     pin: 35
     
     filters:
