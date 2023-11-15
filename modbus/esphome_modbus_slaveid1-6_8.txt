@@ -1,0 +1,373 @@
+
+uart:
+  id: mod_bus
+  tx_pin: 17
+  rx_pin: 16
+  baud_rate: 9600
+  stop_bits: 1
+  parity: none
+  data_bits: 8
+
+#Modbus Sensor & Modbus Relay
+modbus:
+  flow_control_pin: 5
+  id: modbus_sensor
+
+modbus_controller:
+# Modbus device addr slave id1 - Modbus RTU Relay
+  - id: mbid1
+    address: 0x1
+    modbus_id: modbus_sensor
+    setup_priority: -10
+
+# Modbus device addr slave id2 - Modbus XY-MD02 (Temp&Humid)
+  - id: xymd02_02
+    address: 0x2
+    modbus_id: modbus_sensor
+    command_throttle: 200ms
+    setup_priority: -10
+    update_interval: 10s
+
+# Modbus device addr slave id3 - Modbus ZTS-3000-WS-N01 (Temp&Humid)
+  - id: zts_3000_ws_n01
+    address: 0x3
+    modbus_id: modbus_sensor
+    command_throttle: 200ms
+    setup_priority: -10
+    update_interval: 10s
+
+# Modbus device addr slave id4 - Modbus PR-3002-GZWS-N01 (Temp,Humid&Light)
+  - id: pr_3002_gzws_n01
+    address: 0x4
+    modbus_id: modbus_sensor
+    command_throttle: 200ms
+    setup_priority: -10
+    update_interval: 10s
+
+# Modbus device addr slave id5 - Modbus CO2-5000 (Sumtech)
+  - id: co2_5000
+    address: 0x5
+    modbus_id: modbus_sensor
+    command_throttle: 1000ms
+    setup_priority: -10
+    update_interval: 20s
+
+# Modbus device addr slave id6 - Modbus RS-FSJT-N01 (Windspeed)
+  - id: windspeed
+    address: 0x6
+    modbus_id: modbus_sensor
+    command_throttle: 1000ms
+    setup_priority: -10
+    update_interval: 20s
+
+# Modbus device addr slave id8 - ETT Modbus SHT31-box v2
+  - id: ettsht31
+    address: 0x8
+    modbus_id: modbus_sensor
+    command_throttle: 1000ms
+    setup_priority: -10
+    update_interval: 20s
+
+# 4 CH Digital Relay
+switch:
+  - platform: gpio
+    name: "Switch 1"
+    pin: 25
+
+  - platform: gpio
+    name: "Switch 2"
+    pin: 33
+    
+  - platform: gpio
+    name: "Switch 3"
+    pin: 32
+    
+  - platform: gpio
+    name: "Switch 4"
+    pin: 23
+
+# Modbus device addr slave id1 - Modbus RTU Relay
+# CH1
+  - platform: modbus_controller
+    modbus_controller_id: mbid1
+    id: MBRelay1
+    name: "Modbus Relay1"
+    address: 0x00
+    register_type: coil
+    bitmask: 0xFF
+# Modbus device addr slave id1 - Modbus RTU Relay
+# CH2
+  - platform: modbus_controller
+    modbus_controller_id: mbid1
+    id: MBRelay2
+    name: "Modbus Relay2"
+    address: 0x01
+    register_type: coil
+    bitmask: 0xFF
+# Modbus device addr slave id1 - Modbus RTU Relay
+# CH3
+  - platform: modbus_controller
+    modbus_controller_id: mbid1
+    id: MBRelay3
+    name: "Modbus Relay3"
+    address: 0x02
+    register_type: coil
+    bitmask: 0xFF
+# Modbus device addr slave id1 - Modbus RTU Relay
+# CH4
+  - platform: modbus_controller
+    modbus_controller_id: mbid1
+    id: MBRelay4
+    name: "Modbus Relay4"
+    address: 0x03
+    register_type: coil
+    bitmask: 0xFF
+# Modbus device addr slave id1 - Modbus RTU Relay
+# CH5
+  - platform: modbus_controller
+    modbus_controller_id: mbid1
+    id: MBRelay5
+    name: "Modbus Relay5"
+    address: 0x04
+    register_type: coil
+    bitmask: 0xFF
+# Modbus device addr slave id1 - Modbus RTU Relay
+# CH6
+  - platform: modbus_controller
+    modbus_controller_id: mbid1
+    id: MBRelay6
+    name: "Modbus Relay6"
+    address: 0x05
+    register_type: coil
+    bitmask: 0xFF
+# Modbus device addr slave id1 - Modbus RTU Relay
+# CH7
+  - platform: modbus_controller
+    modbus_controller_id: mbid1
+    id: MBRelay7
+    name: "Modbus Relay7"
+    address: 0x06
+    register_type: coil
+    bitmask: 0xFF
+# Modbus device addr slave id1 - Modbus RTU Relay
+# CH8
+  - platform: modbus_controller
+    modbus_controller_id: mbid1
+    id: MBRelay8
+    name: "Modbus Relay8"
+    address: 0x07
+    register_type: coil
+    bitmask: 0xFF
+# Modbus device addr slave id1 - Modbus RTU Relay
+# CH9
+  - platform: modbus_controller
+    modbus_controller_id: mbid1
+    id: MBRelay9
+    name: "Modbus Relay9"
+    address: 0x08
+    register_type: coil
+    bitmask: 0xFF
+# Modbus device addr slave id1 - Modbus RTU Relay
+# CH10
+  - platform: modbus_controller
+    modbus_controller_id: mbid1
+    id: MBRelay10
+    name: "Modbus Relay10"
+    address: 0x09
+    register_type: coil
+    bitmask: 0xFF
+# Modbus device addr slave id1 - Modbus RTU Relay
+# CH11
+  - platform: modbus_controller
+    modbus_controller_id: mbid1
+    id: MBRelay11
+    name: "Modbus Relay11"
+    address: 0x0A
+    register_type: coil
+    bitmask: 0xFF
+# Modbus device addr slave id1 - Modbus RTU Relay
+# CH12
+  - platform: modbus_controller
+    modbus_controller_id: mbid1
+    id: MBRelay12
+    name: "Modbus Relay12"
+    address: 0x0B
+    register_type: coil
+    bitmask: 0xFF
+
+# Digital & Analog Sensor
+sensor:
+#DHT11/DHT22
+  - platform: dht
+    pin: 18
+    temperature:
+      name: "DHT11 Temperature"
+    humidity:
+      name: "DHT11 Humidity"
+    update_interval: 10s
+  
+#Analog SoilMoisture Sensor
+  - platform: adc
+    pin: 35
+    
+    filters:
+      - lambda: |-
+          if (x > 3.15) {
+            return 0;
+          } else if (x < 1.30) {
+            return 100;
+          } else {
+            return (3.15-x) / (3.15-1.30) * 100.0;
+          }
+    name: "Soil Moisture Level"
+    unit_of_measurement: "%"
+    device_class: humidity
+    icon: "mdi:watering-can"
+    update_interval: 2s
+    attenuation: auto
+    accuracy_decimals: 0
+
+# Modbus device addr slave id2 - Modbus XY-MD02 (Temp&Humid)
+  #TEMP sensor
+  - platform: modbus_controller
+    modbus_controller_id: xymd02_02
+    id: temperature2
+    name: "TEMP2"
+    device_class: TEMPERATURE
+    address: 0x001
+    unit_of_measurement: "°C"
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.1
+  #HUMI sensor
+  - platform: modbus_controller
+    modbus_controller_id: xymd02_02
+    id: humidity2
+    name: "HUMI2"
+    device_class: HUMIDITY
+    address: 0x002
+    unit_of_measurement: "%"
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.1  
+
+# Modbus device addr slave id3 - Modbus ZTS-3000-WS-N01 (Temp&Humid)
+  #HUMI sensor
+  - platform: modbus_controller
+    modbus_controller_id: zts_3000_ws_n01
+    id: zts300_Humidity
+    name: "zts300_Humidity"
+    device_class: HUMIDITY
+    address: 0x000
+    unit_of_measurement: "%"
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.1  
+  #TEMP sensor
+  - platform: modbus_controller
+    modbus_controller_id: zts_3000_ws_n01
+    id: zts300_Temperature
+    name: "zts300_Temperature"
+    device_class: TEMPERATURE
+    address: 0x001
+    unit_of_measurement: "°C"
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.1
+
+# Modbus device addr slave id4 - Modbus PR-3002-GZWS-N01 (Temp,Humid&Light)
+  #HUMI sensor
+  - platform: modbus_controller
+    modbus_controller_id: pr_3002_gzws_n01
+    id: gzws_humidity
+    name: "gzws_humidity"
+    device_class: HUMIDITY
+    address: 0x000
+    unit_of_measurement: "%"
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.1  
+
+  #TEMP sensor
+  - platform: modbus_controller
+    modbus_controller_id: pr_3002_gzws_n01
+    id: gzws_temerature
+    name: "gzws_temerature"
+    device_class: TEMPERATURE
+    address: 0x001
+    unit_of_measurement: "°C"
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.1
+  #Light
+  - platform: modbus_controller
+    modbus_controller_id: pr_3002_gzws_n01
+    id: gzws_lux
+    name: "gzws_lux"
+    #device_class: TEMPERATURE
+    address: 0x002
+    unit_of_measurement: "Lux"
+    register_type: read
+    value_type: U_WORD
+
+# Modbus device addr slave id5 - Modbus CO2-5000 (Sumtech)
+  - platform: modbus_controller
+    modbus_controller_id: co2_5000
+    id: co2
+    name: "CO2"
+    address: 0x005
+    unit_of_measurement: "PPM"
+    register_type: holding
+    value_type: U_WORD
+
+## Modbus device addr slave id6 - Modbus RS-FSJT-N01 (Windspeed)
+  - platform: modbus_controller
+    modbus_controller_id: windspeed
+    id: wind
+    name: "Wind speed"
+    address: 0x000
+    unit_of_measurement: "m/s"
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.1
+
+## Modbus device addr slave id8 - ETT Modbus SHT31-box v2
+#SHT31 Temperature
+  - platform: modbus_controller
+    modbus_controller_id: ettsht31
+    id: sht31_temperature
+    name: "ETT Temperature"
+    address: 0x001
+    unit_of_measurement: "°C" #alt0176
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.1
+
+#SHT31 Humidity
+  - platform: modbus_controller
+    modbus_controller_id: ettsht31
+    id: sht31_humidity
+    name: "ETT Temperature"
+    address: 0x002
+    unit_of_measurement: "%RH"
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.1
