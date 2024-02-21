@@ -28,6 +28,8 @@ wifi:
     password: "mbkLDM1unRhO"
 
 captive_portal:
+# หลังจากที่เพิ่ม Devices ผ่าน ESPHome เรียบร้อยแล้วให้คัดลอกเริ่มตั้งแต่บรรทัดที่ 32 เป็นต้นไปเอาไปใส่ในไฟล์ .yaml ของ Devices 
+# ใน ESPHome บันทึกและ Install
 uart:
   id: mod_bus
   tx_pin: 17
