@@ -2,18 +2,6 @@ esphome:
   name: esphomeesp32nex01
   friendly_name: ESPHomeESP32Nex01
 
-  ##New
-  on_boot:
-    priority: -180
-    then:
-      - lambda: |-
-          id(page1).publish_state(true);
-          id(page2).publish_state(false);
-          id(page3).publish_state(false);
-          id(page4).publish_state(false);
-          id(page5).publish_state(false);
-          id(page6).publish_state(false);
-
 esp32:
   board: esp32dev
   framework:
@@ -65,8 +53,6 @@ uart:
     tx_pin: GPIO17
     baud_rate: 9600
 
-
-
 display:
   - platform: nextion
     id: nextiondisplay
@@ -114,10 +100,6 @@ display:
                 it.set_component_text_printf("Automations.ontime","%s",id(glob_morning_active).c_str());
                 it.set_component_text_printf("screensaver.time","%02d:%02d",time.hour,time.minute);
             }
-
-
-
-
    
 switch:
   - platform: gpio
