@@ -1,0 +1,1263 @@
+esphome:
+  name: esphomeesp32nex01
+  friendly_name: ESPHomeESP32Nex01
+
+  ##New
+  on_boot:
+    priority: -180
+    then:
+      - lambda: |-
+          id(page1).publish_state(true);
+          id(page2).publish_state(false);
+          id(page3).publish_state(false);
+          id(page4).publish_state(false);
+          id(page5).publish_state(false);
+          id(page6).publish_state(false);
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "qoN4POYuqP0h26jtSf9wFdOxHPkLAAFVnurYeBHRQO0="
+
+ota:
+  password: "49f9a011b05a219523048722702691b2"
+
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: Asia/Bangkok
+sun:
+  latitude: !secret latitude
+  longitude: !secret longitude
+  
+globals:
+  - id: glob_morning_active             # Morning Routine start time
+    type: std::string
+    initial_value: ' '
+
+  - id: glob_today_icon                 # Today's weather icon number, that is requested on the display
+    type: int
+    initial_value: '25'
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Esphomeesp32Nex01"
+    password: "yLEl34MJWFpR"
+
+captive_portal:
+
+# Example configuration entry
+uart:
+  - id: uart_2
+    rx_pin: GPIO16
+    tx_pin: GPIO17
+    baud_rate: 9600
+
+
+
+display:
+  - platform: nextion
+    id: nextiondisplay
+    uart_id: uart_2
+    update_interval: 60s
+    lambda: |-
+            it.set_wait_for_ack(false);
+            
+            auto date = id(sntp_time).now().strftime("%b. %d");
+            auto time = id(sntp_time).now();
+
+            if (id(page1).state) {
+                      it.set_component_text_printf("Overview.intemp","%2f",id(temperature_inside).state);
+                      it.set_component_text_printf("Overview.outtemp","%3f",id(temperature_outside).state);
+                      it.send_command_printf("%s.pic=%i", "Overview.weather",id(glob_today_icon));
+                      it.set_component_text_printf("Overview.fb","%s",id(today_facebook).state.c_str());
+                      it.set_component_text_printf("Overview.fbevent","%s",id(today_facebookevents).state.c_str());
+                      it.set_component_text_printf("Overview.google","%s",id(today_google).state.c_str());
+                      it.set_component_text_printf("Overview.time","%02d:%02d",time.hour,time.minute);
+                      it.set_component_text("Overview.date", date.c_str());
+                      
+            }
+            if (id(page2).state) {
+                   it.send_command_printf("Lights.bt0.val=%d",id(table_lights).state);
+                   it.send_command_printf("Lights.bt1.val=%d",id(livingroom_lights).state);
+                   it.send_command_printf("Lights.bt2.val=%d",id(bedroom_lights).state);
+                   it.send_command_printf("Lights.bt3.val=%d",id(garage_lights).state);
+
+                   it.send_command_printf("Lights.bt4.val=%d",id(mbrelaysw1).state);
+                   it.send_command_printf("Lights.bt5.val=%d",id(mbrelaysw2).state);
+                   it.send_command_printf("Lights.bt6.val=%d",id(mbrelaysw3).state);
+                   it.send_command_printf("Lights.bt7.val=%d",id(mbrelaysw4).state);
+                   it.send_command_printf("Lights.bt8.val=%d",id(mbrelaysw5).state);
+                   it.send_command_printf("Lights.bt9.val=%d",id(mbrelaysw6).state);
+                   it.send_command_printf("Lights.bt10.val=%d",id(mbrelaysw7).state);
+                   it.send_command_printf("Lights.bt11.val=%d",id(mbrelaysw8).state);
+
+            }
+            if (id(page3).state) {
+                   it.set_component_text_printf("Media.vol","%2.1f%%",id(kodi_volume).state);
+                   it.send_command_printf("Media.volslider.val=%.0f",id(kodi_volume).state);
+                   it.set_component_text("Media.koditext",id(kodi_text).state.c_str());
+            }  
+            if (id(page5).state) {
+                it.set_component_text_printf("Automations.ontime","%s",id(glob_morning_active).c_str());
+                it.set_component_text_printf("screensaver.time","%02d:%02d",time.hour,time.minute);
+            }
+
+
+
+
+   
+switch:
+  - platform: gpio
+    id: relay1
+    name: "SW1"
+    pin: 25
+    restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: gpio
+    name: "SW2"
+    pin: 33
+    id: relay2
+    #restore_mode: RESTORE_default_ON
+    
+  - platform: gpio
+    name: "SW3"
+    pin: 32
+    id: relay3
+    #inverted: true
+    
+  - platform: gpio
+    name: "SW4"
+    pin: 23    
+
+  - platform: restart
+    name: Reboot Nextion4.3
+    id: reboot
+
+
+## --------------------  TEXT SENSORS from HA  --------------------
+#    some sensor data is formatted as text/string, so they cannot be regular imported as regular sensors
+
+
+text_sensor:
+  - platform: homeassistant
+    id: today_facebook
+    entity_id: sensor.facebook
+    
+  - platform: homeassistant
+    id: today_facebookevents
+    entity_id: sensor.facebookevents
+    
+  - platform: homeassistant
+    id: today_google
+    entity_id: sensor.google
+    
+  - platform: homeassistant
+    id: command
+    entity_id: input_text.nextioncom3  
+    on_value:
+       then:
+         - lambda: 'id(nextiondisplay).send_command_printf("%s",id(command).state.c_str());'
+    
+  - platform: homeassistant
+    id: morning_on_time
+    entity_id: input_datetime.brigi_time_on
+    
+  - platform: homeassistant
+    id: sonoff_timer
+    entity_id: sensor.sonoff1_timer
+    on_value:
+       then:
+         - lambda: 'id(nextiondisplay).set_component_text_printf("Automations.timer","%s",id(sonoff_timer).state.c_str());'
+    
+    
+  - platform: homeassistant   # Home Assistant sensor controlling display sleep in case nobody is home
+    id: statemode
+    entity_id: input_select.state_mode
+    on_value:
+       then:
+         - if:
+            condition:
+              lambda: 'return (id(statemode).state == "Away" || "Movie" || "Vacation"|| "Sleep" );'
+            then:
+              - lambda: 'id(nextiondisplay).send_command_printf("sleep=1");'
+            else:
+              - lambda: 'id(nextiondisplay).send_command_printf("sleep=0");'
+
+  - platform: template
+    id: esp_ip
+    lambda: 'return {WiFi.localIP().toString().c_str()};'
+    on_value:
+      then:
+        - lambda: 'id(nextiondisplay).set_component_text_printf("Automations.wifistat","%s",id(esp_ip).state.c_str());'
+    
+    
+  - platform: homeassistant   # Kodi Now Playing Text
+    id: kodi_text
+    entity_id: sensor.kodi_text
+    on_value:
+       then:
+         - lambda: 'id(nextiondisplay).set_component_text("Media.koditext",id(kodi_text).state.c_str());'
+
+  - platform: template
+    name: "Uptime3.5"
+    id: uptime_formatted
+    lambda: |-
+      uint32_t dur = id(uptime_s).state;
+      int dys = 0;
+      int hrs = 0;
+      int mnts = 0;
+      if (dur > 86399) {
+        dys = trunc(dur / 86400);
+        dur = dur - (dys * 86400);
+      }
+      if (dur > 3599) {
+        hrs = trunc(dur / 3600);
+        dur = dur - (hrs * 3600);
+      }
+      if (dur > 59) {
+        mnts = trunc(dur / 60);
+        dur = dur - (mnts * 60);
+      }
+      char buffer[17];
+      sprintf(buffer, "%ud %02uh %02um %02us", dys, hrs, mnts, dur);
+      return {buffer};
+    icon: mdi:clock-start
+    update_interval: 60s
+
+## --------------------  SENSORS from HA  --------------------
+#  usually numeric states can go here
+
+sensor:
+  - platform: homeassistant   # Inside temperature
+    id: temperature_inside
+    #entity_id: sensor.living_room_temperature
+    entity_id: sensor.esphomeesp32mb02_temp2
+    accuracy_decimals: 0
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("Overview.intemp","%2f",id(temperature_inside).state);'
+
+  - platform: homeassistant   # Outside temperature
+    id: temperature_outside
+    entity_id: sensor.esphomeesp32mb02_humi2
+    accuracy_decimals: 0
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("Overview.outtemp","%2f",id(temperature_outside).state);'
+
+  - platform: homeassistant   # Forecast precipitation
+    entity_id: sensor.dark_sky_precip_probability_8h
+    id: today_rain
+    on_value:
+       then:
+         - if:
+            condition:
+              lambda: 'return (id(today_rain).state > 40);'
+            then:
+              lambda: 'id(nextiondisplay).set_component_text("Overview.rain","Rain");'
+            else:
+              lambda: 'id(nextiondisplay).set_component_text("Overview.rain","No rain");'
+
+  - platform: homeassistant   # Forecast icon
+    id: weather_symbol
+    entity_id: sensor.weather_symbol
+    on_value:                 # This needs to be fixed for weather icon/text
+       then:                  # The numbers here may change on different picture import order in Nextion or USART HMI
+         - if:
+            condition:
+              lambda: 'return (id(weather_symbol).state >= 1 && id(weather_symbol).state <= 15);'
+            then:
+              lambda: 'id(glob_today_icon) = id(weather_symbol).state + 24;'
+         - if:
+            condition:
+              lambda: 'return (id(weather_symbol).state >= 20 && id(weather_symbol).state <= 34);'
+            then:
+              lambda: 'id(glob_today_icon) = id(weather_symbol).state + 20;'
+         - if:
+            condition:
+              lambda: 'return (id(weather_symbol).state >= 40);'
+            then:
+              lambda: 'id(glob_today_icon) = id(weather_symbol).state + 15;'
+         - lambda: 'id(nextiondisplay).send_command_printf("%s.pic=%i", "Overview.weather",id(glob_today_icon));'
+
+                          
+  - platform: homeassistant   # Kodi volume
+    id: kodi_volume
+    entity_id: sensor.kodi_volume
+    on_value:
+       then:
+         - lambda: |-
+                    id(nextiondisplay).set_component_text_printf("Media.vol","%2.1f%%",id(kodi_volume).state);
+                    id(nextiondisplay).send_command_printf("Media.volslider.val=%.0f",id(kodi_volume).state);
+              
+  - platform: uptime
+    id: uptime_s
+    update_interval: 60s
+  
+## --------------------  BINARY SENSORS  --------------------
+#  binary sensors here are both from Nextion and HA. ESPHOME currently can read only binary sensors from Nextion
+
+binary_sensor:
+
+  - platform: status
+    name: "Nextion 4.3 Display"
+    id: displaystatus
+    on_state:       # based on wifi connection, we set the global variable here. This way it will be stored and valid upon refresh
+      - if:
+          condition:
+            api.connected:
+          then:
+            - lambda: 'id(nextiondisplay).set_component_text_printf("Automations.wifistat","%s",id(esp_ip).state.c_str());'
+          else:
+            - lambda: 'id(nextiondisplay).set_component_text("Automations.wifistat","Wifi not Connected");'
+ 
+ 
+  # Status Screen - Motion Control
+  - platform: homeassistant
+    id: statusscreenmotion
+    entity_id: input_boolean.nextion_motion
+       
+#  Importing 2 motion sensors from HA. If these are triggered, then the display will wake up
+    
+  - platform: homeassistant
+    id: livingroom_pir_sensor
+    entity_id: binary_sensor.pir_sensor            
+    on_press:
+      then:
+        - script.execute: motionscript
+        
+  - platform: homeassistant
+    id: dafang_pir_sensor
+    entity_id: binary_sensor.dafang_motion_sensor            
+    on_press:
+      then:
+        - script.execute: motionscript
+        
+  - platform: homeassistant
+    id: kitchen_pir_sensor
+    entity_id: binary_sensor.kitchen_pir_sensor            
+    on_press:
+      then:
+        - script.execute: motionscript
+
+  - platform: homeassistant   # Kitchen Light state
+    id: table_lights
+    entity_id: switch.esphomeesp32nex01_sw1
+    on_state:
+       then:
+         - lambda: 'id(nextiondisplay).send_command_printf("Lights.bt0.val=%d",id(table_lights).state);'  
+      
+  - platform: homeassistant   # Livingroom Light state
+    id: livingroom_lights
+    entity_id: switch.esphomeesp32nex01_sw2
+    on_state:
+       then:
+         - lambda: 'id(nextiondisplay).send_command_printf("Lights.bt1.val=%d",id(livingroom_lights).state);'     
+         
+  - platform: homeassistant   # Bedroom Light state
+    id: bedroom_lights
+    entity_id: switch.esphomeesp32nex01_sw3
+    on_state:
+       then:
+         - lambda: 'id(nextiondisplay).send_command_printf("Lights.bt2.val=%d",id(bedroom_lights).state);'   
+
+#NEW
+#SW4
+  - platform: homeassistant   # SW4
+    id: garage_lights
+    entity_id: switch.esphomeesp32nex01_sw4
+
+    on_state:
+       then:
+         - lambda: 'id(nextiondisplay).send_command_printf("Lights.bt3.val=%d",id(garage_lights).state);'    
+#SW5
+  - platform: homeassistant   # SW5
+    id: mbrelaysw1
+    entity_id: switch.esphomeesp32mb02_sw1
+
+    on_state:
+       then:
+         - lambda: 'id(nextiondisplay).send_command_printf("Lights.bt4.val=%d",id(mbrelaysw1).state);'   
+#SW6
+  - platform: homeassistant   # SW6
+    id: mbrelaysw2
+    entity_id: switch.esphomeesp32mb02_sw2
+    on_state:
+       then:
+         - lambda: 'id(nextiondisplay).send_command_printf("Lights.bt5.val=%d",id(mbrelaysw2).state);'
+#SW7
+  - platform: homeassistant   # SW7
+    id: mbrelaysw3
+    entity_id: switch.esphomeesp32mb02_sw3
+    on_state:
+       then:
+         - lambda: 'id(nextiondisplay).send_command_printf("Lights.bt6.val=%d",id(mbrelaysw3).state);'
+#SW8
+  - platform: homeassistant   # SW8
+    id: mbrelaysw4
+    entity_id: switch.esphomeesp32mb02_sw4
+    on_state:
+       then:
+         - lambda: 'id(nextiondisplay).send_command_printf("Lights.bt7.val=%d",id(mbrelaysw4).state);'
+#SW9
+  - platform: homeassistant   # SW9
+    id: mbrelaysw5
+    entity_id: switch.esphomeesp32mb02_sw5
+    on_state:
+       then:
+         - lambda: 'id(nextiondisplay).send_command_printf("Lights.bt8.val=%d",id(mbrelaysw5).state);'
+#SW10
+  - platform: homeassistant   # SW10
+    id: mbrelaysw6
+    entity_id: switch.esphomeesp32mb02_sw6
+    on_state:
+       then:
+         - lambda: 'id(nextiondisplay).send_command_printf("Lights.bt9.val=%d",id(mbrelaysw6).state);'
+#SW11
+  - platform: homeassistant   # SW11
+    id: mbrelaysw7
+    entity_id: switch.esphomeesp32mb02_sw7
+    on_state:
+       then:
+         - lambda: 'id(nextiondisplay).send_command_printf("Lights.bt10.val=%d",id(mbrelaysw7).state);'
+#SW12
+  - platform: homeassistant   # SW12
+    id: mbrelaysw8
+    entity_id: switch.esphomeesp32mb02_sw8
+    on_state:
+       then:
+         - lambda: 'id(nextiondisplay).send_command_printf("Lights.bt11.val=%d",id(mbrelaysw8).state);'
+#end new   
+
+  - platform: homeassistant   # Bedroom Light state
+    id: morningauto
+    entity_id: automation.morning_on_brigi
+    on_state:
+       then:
+         - lambda: 'id(nextiondisplay).send_command_printf("Automations.bt0.val=%d",id(morningauto).state);'        
+         
+
+# Because currently it is not possible to read (sensor) values from Nextion, page navigation is done with binary sensors
+
+  # 1. page - Overview
+  - platform: nextion
+    page_id: 0
+    component_id: 2
+    id: page1
+    on_press:
+      then:
+        - component.update: nextiondisplay
+        - script.execute: autobrightness
+        
+
+  # 2. page - Lights
+  - platform: nextion
+    page_id: 1
+    component_id: 2
+    id: page2
+    on_press:
+      then:
+        - component.update: nextiondisplay
+        
+
+  # 3. page - Media
+  - platform: nextion
+    page_id: 2
+    component_id: 3
+    id: page3
+    on_press:
+      then:
+        - component.update: nextiondisplay
+        
+
+  # 4. page - Vacuum Cleaner  #Nothing to update here
+  - platform: nextion
+    page_id: 3
+    component_id: 5
+    id: page4
+    on_press:
+      then:
+        
+
+  # 5. page - Automations and settings
+  - platform: nextion
+    page_id: 4
+    component_id: 5
+    id: page5
+    on_press:
+      then:
+        - component.update: nextiondisplay
+        
+
+  # 6. page - Developer settings
+  - platform: nextion
+    page_id: 5
+    component_id: 7
+    id: page6
+    on_press:
+      then:
+        - component.update: nextiondisplay
+        
+
+
+## ----------------------------------------------------------------------------------------------------
+## -------- Start definition of each binary sensor from Nextion, that esphome reacts with  ------------
+
+#
+#PAGE 0 - Overview
+#
+
+  # HI - welcome home Button
+  - platform: nextion
+    page_id: 0
+    component_id: 21
+    id: hi
+    on_press:
+      then:
+        - homeassistant.service:
+            service: script.1551823637711   # Welcome Home Script
+
+# ByeBye Button
+  - platform: nextion
+    page_id: 0
+    component_id: 20
+    id: bye
+    on_press:
+      then:
+        - homeassistant.service:
+            service: script.1551823637712  # Away Mode - Turn Lights, Media OFF
+        - logger.log: "Turn everything off script here"
+        - homeassistant.service:
+            service: script.1567332436215  # Move camera to ON position
+        - logger.log: "Camera to ON Position script here"
+        
+
+  # Media play/pause button
+  - platform: nextion
+    page_id: 0
+    component_id: 13
+    id: media
+    on_press:
+      then:
+        - homeassistant.service:
+            service: media_player.media_play_pause
+            data:
+              entity_id: media_player.kodi
+        
+
+#
+#PAGE 1 - Lights
+#
+  # Kitchen Light toggle
+  - platform: nextion
+    page_id: 1
+    component_id: 30
+    id: kitchen
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.turn_on
+            data: 
+              entity_id: switch.esphomeesp32nex01_sw1
+        
+    on_release:
+      then:
+        - homeassistant.service:
+            service: switch.turn_off
+            data: 
+              entity_id: switch.esphomeesp32nex01_sw1
+        
+
+  # Livingroom Lights toggle
+  - platform: nextion
+    page_id: 1
+    component_id: 31
+    id: living
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+        
+            data:
+              entity_id: switch.esphomeesp32nex01_sw2
+        
+    on_release:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esphomeesp32nex01_sw2
+        
+
+  # Bedroom Lights toggle
+  - platform: nextion
+    page_id: 1
+    component_id: 32
+    id: bedroom
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esphomeesp32nex01_sw3
+        
+    on_release:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esphomeesp32nex01_sw3
+
+  # garage_lights
+  - platform: nextion
+    page_id: 1
+    component_id: 33
+    id: modbusrelay4
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esphomeesp32nex01_sw4
+        
+    on_release:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esphomeesp32nex01_sw4
+
+# mbrelaysw1
+  - platform: nextion
+    page_id: 1
+    component_id: 34
+    id: modbusrelay5
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esphomeesp32mb02_sw1
+        
+    on_release:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esphomeesp32mb02_sw1
+# mbrelaysw2
+  - platform: nextion
+    page_id: 1
+    component_id: 35
+    id: modbusrelay6
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esphomeesp32mb02_sw2
+        
+    on_release:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esphomeesp32mb02_sw2
+# mbrelaysw3
+  - platform: nextion
+    page_id: 1
+    component_id: 36
+    id: modbusrelay7
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esphomeesp32mb02_sw3
+        
+    on_release:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esphomeesp32mb02_sw3
+# mbrelaysw4
+  - platform: nextion
+    page_id: 1
+    component_id: 37
+    id: modbusrelay8
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esphomeesp32mb02_sw4
+        
+    on_release:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esphomeesp32mb02_sw4
+# mbrelaysw5
+  - platform: nextion
+    page_id: 1
+    component_id: 38
+    id: modbusrelay9
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esphomeesp32mb02_sw5
+        
+    on_release:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esphomeesp32mb02_sw5 
+# mbrelaysw6
+  - platform: nextion
+    page_id: 1
+    component_id: 39
+    id: modbusrelay10
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esphomeesp32mb02_sw6
+        
+    on_release:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esphomeesp32mb02_sw6
+# mbrelaysw1
+  - platform: nextion
+    page_id: 1
+    component_id: 40
+    id: modbusrelay11
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esphomeesp32mb02_sw7
+        
+    on_release:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esphomeesp32mb02_sw7
+# mbrelaysw8
+  - platform: nextion
+    page_id: 1
+    component_id: 41
+    id: modbusrelay12
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esphomeesp32mb02_sw8
+        
+    on_release:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esphomeesp32mb02_sw8
+#End New
+
+#
+#PAGE 2 - Media
+#
+  # Radio Station 1 button - RiseFM
+  - platform: nextion
+    page_id: 2
+    component_id: 9
+    id: radio1
+    on_press:
+      then:
+        - homeassistant.service:
+            service: media_player.play_media
+            data:
+              entity_id: media_player.kodi
+              media_content_id: http://risefm1.stereoplayer.hu:8080/risefm_hq
+              media_content_type: music
+        
+
+  # Radio Station 2 button - Petofi Radio
+  - platform: nextion
+    page_id: 2
+    component_id: 10
+    id: radio2
+    on_press:
+      then:
+        - homeassistant.service:
+            service: media_player.play_media
+            data:
+              entity_id: media_player.kodi
+              media_content_id: http://mr-stream.mediaconnect.hu/4738/mr2.mp3
+              media_content_type: music
+        
+
+  # Radio Station 3 button - Radio Most
+  - platform: nextion
+    page_id: 2
+    component_id: 11
+    id: radio3
+    on_press:
+      then:
+        - homeassistant.service:
+            service: media_player.play_media
+            data:
+              entity_id: media_player.kodi
+              media_content_id: http://stream.radiomost.hu:8200/live.mp3
+              media_content_type: music
+        
+
+  # Radio Station 4 button - Radio Gaga
+  - platform: nextion
+    page_id: 2
+    component_id: 12
+    id: radio4
+    on_press:
+      then:
+        - homeassistant.service:
+            service: media_player.play_media
+            data:
+              entity_id: media_player.kodi
+              media_content_id: http://rc.radiogaga.ro:8000/live
+              media_content_type: music
+        
+
+  # Radio Station 5 button - P3 Star
+  - platform: nextion
+    page_id: 2
+    component_id: 13
+    id: radio5
+    on_press:
+      then:
+        - homeassistant.service:
+            service: media_player.play_media
+            data:
+              entity_id: media_player.kodi
+              media_content_id: https://sverigesradio.se/topsy/direkt/tunein/1607-hi.mp3
+              media_content_type: music
+        
+
+  # Radio Station 6 button - iLikeRadio/StarFM
+  - platform: nextion
+    page_id: 2
+    component_id: 19
+    id: radio6
+    on_press:
+      then:
+        - homeassistant.service:
+            service: media_player.play_media
+            data:
+              entity_id: media_player.kodi
+              media_content_id: http://fm05-ice.stream.khz.se/fm05_mp3
+              media_content_type: music
+        
+
+  # Radio Station 7 button - RixFM
+  - platform: nextion
+    page_id: 2
+    component_id: 20
+    id: radio7
+    on_press:
+      then:
+        - homeassistant.service:
+            service: media_player.play_media
+            data:
+              entity_id: media_player.kodi
+              media_content_id: http://fm01-ice.stream.khz.se/fm01_mp3
+              media_content_type: music
+        
+
+  # Radio Station 8 button - Latino 99FM
+  - platform: nextion
+    page_id: 2
+    component_id: 14
+    id: radio8
+    on_press:
+      then:
+        - homeassistant.service:
+            service: media_player.play_media
+            data:
+              entity_id: media_player.kodi
+              media_content_id: http://96.31.83.86:8205/LATINO%2099%20FM
+              media_content_type: music
+        
+
+  # Decrease Volume
+  - platform: nextion
+    page_id: 2
+    component_id: 15
+    id: voldown
+    on_press:
+      then:
+        - homeassistant.service:
+            service: media_player.volume_down
+            data:
+              entity_id: media_player.kodi
+        - component.update: nextiondisplay
+        
+
+  # Increase Volume
+  - platform: nextion
+    page_id: 2
+    component_id: 16
+    id: volup
+    on_press:
+      then:
+        - homeassistant.service:
+            service: media_player.volume_up
+            data:
+              entity_id: media_player.kodi
+        - component.update: nextiondisplay
+        
+
+  # Media play/pause button
+  - platform: nextion
+    page_id: 2
+    component_id: 7
+    id: media2
+    on_press:
+      then:
+        - homeassistant.service:
+            service: media_player.media_play_pause
+            data:
+              entity_id: media_player.kodi
+        
+
+  # Media Stop button
+  - platform: nextion
+    page_id: 2
+    component_id: 6
+    id: mediastop
+    on_press:
+      then:
+        - homeassistant.service:
+            service: media_player.media_stop
+            data:
+              entity_id: media_player.kodi
+        
+
+
+#
+#PAGE 3 - Consuela
+#
+  # Consuela Lower Fan Speed
+  - platform: nextion
+    page_id: 3
+    component_id: 13
+    id: speedlow
+    on_press:
+      then:
+        - homeassistant.service:
+            service: input_number.decrement
+            data:
+              entity_id: input_number.consuelaspeed
+        
+
+  # Consuela Increase Fan Speed
+  - platform: nextion
+    page_id: 3
+    component_id: 14
+    id: speedhigh
+    on_press:
+      then:
+        - homeassistant.service:
+            service: input_number.increment
+            data:
+              entity_id: input_number.consuelaspeed
+        
+
+
+  # Consuela Kitchen Quick
+  - platform: nextion
+    page_id: 3
+    component_id: 8
+    id: consuelakitchenquick
+    on_press:
+      then:
+        - homeassistant.service:
+            service: script.turn_on
+            data:
+              entity_id: script.1555171803610
+        
+
+  # Consuela Kitchen
+  - platform: nextion
+    page_id: 3
+    component_id: 7
+    id: consuelakitchen
+    on_press:
+      then:
+        - homeassistant.service:
+            service: script.turn_on
+            data:
+              entity_id: script.1555171803611
+        
+
+  # Consuela Livingroom
+  - platform: nextion
+    page_id: 3
+    component_id: 10
+    id: consuelalivingroom
+    on_press:
+      then:
+        - homeassistant.service:
+            service: script.turn_on
+            data:
+              entity_id: script.1555171803612
+        
+
+  # Consuela Bedroom
+  - platform: nextion
+    page_id: 3
+    component_id: 11
+    id: consuelabedroom
+    on_press:
+      then:
+        - homeassistant.service:
+            service: script.turn_on
+            data:
+              entity_id: script.1555171803613
+        
+
+  # Consuela Entry
+  - platform: nextion
+    page_id: 3
+    component_id: 9
+    id: consuelaentry
+    on_press:
+      then:
+        - homeassistant.service:
+            service: script.turn_on
+            data:
+              entity_id: script.1555171803609
+        
+
+  # Consuela Go Home
+  - platform: nextion
+    page_id: 3
+    component_id: 16
+    id: consgohome
+    on_press:
+      then:
+        - homeassistant.service:
+            service: script.turn_on
+            data:
+              entity_id: script.1565813738674
+        
+
+  # Consuela Go To TrashSpot
+  - platform: nextion
+    page_id: 3
+    component_id: 15
+    id: constrashspot
+    on_press:
+      then:
+        - homeassistant.service:
+            service: script.turn_on
+            data:
+              entity_id: script.1565813738674
+        
+
+  # Consuela Pause
+  - platform: nextion
+    page_id: 3
+    component_id: 19
+    id: conspause
+    on_press:
+      then:
+        - homeassistant.service:
+            service: vacuum.pause
+            data:
+              entity_id: vacuum.rockrobo
+        
+    on_release:
+      then:
+        - homeassistant.service:
+            service: vacuum.start
+            data:
+              entity_id: vacuum.rockrobo
+        
+
+  # Consuela Speak
+  - platform: nextion
+    page_id: 3
+    component_id: 17
+    id: speak
+    on_press:
+      then:
+        - homeassistant.service:
+            service: vacuum.locate
+            data:
+              entity_id: vacuum.rockrobo
+
+  # Consuela Swear
+  - platform: nextion
+    page_id: 3
+    component_id: 18
+    id: swear
+    on_press:
+      then:
+        - homeassistant.service:
+            service: script.turn_on
+            data:
+              entity_id: script.1555864273341
+
+  # Consuela Music
+  - platform: nextion
+    page_id: 3
+    component_id: 12
+    id: consumusic
+    on_press:
+      then:
+        - homeassistant.service:
+            service: script.1564844497457
+        
+    on_release:
+      then:
+        - homeassistant.service:
+            service: script.1564844518034
+        
+
+
+#
+#PAGE 4 - Automations / Settings
+#
+
+  # Kitchen Plug toggle
+  - platform: nextion
+    page_id: 4
+    component_id: 11
+    id: kitchenplug
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.turn_on
+            data:
+              entity_id: switch.sonoff_1_kitchen
+        
+    on_release:
+      then:
+        - homeassistant.service:
+            service: switch.turn_off
+            data:
+              entity_id: switch.sonoff_1_kitchen
+        
+
+  # Morning Routine
+  - platform: nextion
+    page_id: 4
+    component_id: 7
+    id: morningroutine
+    on_press:
+      then:
+        - homeassistant.service:
+            service: automation.turn_on
+            data:
+              entity_id: automation.morning_on_brigi
+        - lambda: |-
+            id(glob_morning_active) = id(morning_on_time).state.c_str();
+            id(nextiondisplay).set_component_text_printf("Automations.ontime","%s",id(glob_morning_active).c_str());
+    on_release:
+      then:
+        - homeassistant.service:
+            service: automation.turn_off
+            data:
+              entity_id: automation.morning_on_brigi
+        - lambda: |-
+            id(glob_morning_active) = " ";
+            id(nextiondisplay).set_component_text_printf("Automations.ontime","%s",id(glob_morning_active).c_str());
+
+  # Camera - Calibrate
+  - platform: nextion
+    page_id: 5
+    component_id: 9
+    id: cam_cal
+    on_press:
+      then:
+        - homeassistant.service:
+            service: script.1555780448545
+
+  # Camera - Turn OFF
+  - platform: nextion
+    page_id: 5
+    component_id: 11
+    id: cam_off
+    on_press:
+      then:
+        - homeassistant.service:
+            service: script.1555864273339
+
+  # Camera - Turn ON
+  - platform: nextion
+    page_id: 5
+    component_id: 10
+    id: cam_on
+    on_press:
+      then:
+        - homeassistant.service:
+            service: script.1567332436215
+            
+  # Buzzer Switch
+  - platform: nextion
+    page_id: 5
+    component_id: 13
+    id: buzzertoggle
+
+  # Brightness switch
+  - platform: nextion
+    page_id: 5
+    component_id: 12
+    id: brightness
+    on_press:
+      then:
+        - script.execute: autobrightness
+
+script:
+  - id: autobrightness
+    then:
+      - if:
+          condition:
+            binary_sensor.is_on: brightness
+          then:
+            - if:
+                condition:
+                  - sun.is_above_horizon:
+                then:
+                  lambda: 'id(nextiondisplay).send_command_printf("dim=80");'    
+                else:
+                  - lambda: 'id(nextiondisplay).send_command_printf("dim=5");'
+  - id: motionscript
+    then:
+      - if:
+          condition:
+            - binary_sensor.is_on: statusscreenmotion
+          then:
+            - lambda: 'id(nextiondisplay).send_command_printf("sleep=0");'
+            - script.execute: autobrightness
