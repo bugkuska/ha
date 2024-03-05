@@ -1,0 +1,25 @@
+i2c:
+  sda: 21
+  scl: 22
+
+display:
+  - platform: lcd_pcf8574
+    dimensions: 16x2
+    address: 0x27
+    update_interval: 1s
+    id: lcd
+    lambda: |-
+      it.printf(0, 1, "MQ4 Methane Gas: %.1f ppm", id(MQ4_CH4).state);
+
+sensor:
+
+#MQ4 Methane Gas
+  - platform: adc
+    pin: 35
+    name: "MQ4 CH4 sensor"
+    accuracy_decimals: 0
+    id: MQ4_CH4
+    update_interval: 2s
+    unit_of_measurement: "ppm"
+    filters: 
+     - lambda: return (pow(10, log10((0.12/x)*(5-x)/(5-0.12))/(-0.35))) ;
