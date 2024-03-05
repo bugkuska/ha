@@ -9,7 +9,10 @@ display:
     update_interval: 1s
     id: lcd
     lambda: |-
-      it.printf(0, 1, "MQ4 Methane Gas: %.1f ppm", id(MQ4_CH4).state);
+      it.printf(0, 0, "MQ4 Methane Gas: %.1f ppm", id(MQ4_CH4).state);
+      it.printf(0, 1, "DHT11-1: %.1f C", id(dht1_temp1).state);
+      it.printf(0, 2, "DHT11-1: %.1f %", id(dht1_humi1).state);
+      
 
 sensor:
 
@@ -23,3 +26,13 @@ sensor:
     unit_of_measurement: "ppm"
     filters: 
      - lambda: return (pow(10, log10((0.12/x)*(5-x)/(5-0.12))/(-0.35))) ;
+
+  - platform: dht
+    pin: 33
+    model: DHT11
+    temperature:
+      id: dht1_temp1
+      name: "DHT11-Temperature1"
+    humidity:
+      id: dht1_humi1
+      name: "DHT11-Humidity1"
