@@ -23,11 +23,28 @@ systemd-resolved udisks2 wget -y
 6. Download และติดตั้ง OS Agent  
 #wget https://github.com/home-assistant/os-agent/releases/download/1.6.0/os-agent_1.6.0_linux_aarch64.deb
 #dpkg -i os-agent_1.6.0_linux_aarch64.deb
+**Orange Pi (Armbian)
+#wget https://github.com/home-assistant/os-agent/releases/download/1.6.0/os-agent_1.6.0_linux_armv7.deb
+#dpkg -i os-agent_1.6.0_linux_armv7.deb
 
 7.Download และติดตั้ง homeassistant-supervised
 #wget https://github.com/home-assistant/supervised-installer/releases/download/1.5.0/homeassistant-supervised.deb
 #dpkg -i homeassistant-supervised.deb
+**Orange Pi (Armbian)
+ถ้ามี Error "[error] Armbian 24.2.1 bookworm is not supported!" 
+ให้แก้ไฟล์
+#nano /etc/os-release
+PRETTY_NAME="Armbian 23.11.0-trunk lunar"
+แก้เป็น
+PRETTY_NAME="Debian GNU/Linux 11 (bullseye)"
+บันทึกและออกจาก nano
+
+แล้ว Run คำสั่งติดตั้ง supervised อีกรอบ
+#dpkg -i homeassistant-supervised.deb
+
 8. เลือกเมนู raspberrypi4-64 >> Enter  
+**Orange Pi (Armbian)
+เลือกเมนู qemuarm-64 >> Enter  
 เสร็จแล้วรอประมาณ 20 นาที
 http://ip-server:8123
 set hostname
