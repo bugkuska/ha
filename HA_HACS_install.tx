@@ -1,0 +1,11 @@
+HA+HACS
+เปิด Terminal หรือ Remote เข้าเครื่อง HA 
+พิมพ์คำสั่งเพื่อ Download และติดตั้ง HACS
+#wget -O - https://get.hacs.xyz | bash -
+
+เสร็จแล้ว Restart HA 1 รอบโดยไปที่ Settings > System เลือก ICON มุมบนขวา > Restart Home Assistant
+
+หลังจาก Restart เสร็จแล้วให้ไปที่ 
+Settings > Devices & services > ADD INTEGRATION แล้วพิมพ์ตรงช่อง Select brand > HACS
+
+คัดลอก Authorized code ไปเปิดใน GigHub ทำตามขั้นตอน 
