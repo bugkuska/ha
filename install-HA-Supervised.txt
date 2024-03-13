@@ -44,7 +44,7 @@ PRETTY_NAME="Debian GNU/Linux 11 (bullseye)"
 
 8. เลือกเมนู raspberrypi4-64 >> Enter  
 **Orange Pi (Armbian)
-เลือกเมนู qemuarm-64 >> Enter  
+เลือกเมนู qemuarm >> Enter (armv7,32bit)  
 เสร็จแล้วรอประมาณ 20 นาที
 http://ip-server:8123
 set hostname
