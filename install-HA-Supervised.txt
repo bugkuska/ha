@@ -30,7 +30,8 @@ systemd-resolved udisks2 wget -y
 7.Download และติดตั้ง homeassistant-supervised
 #wget https://github.com/home-assistant/supervised-installer/releases/download/1.5.0/homeassistant-supervised.deb
 #dpkg -i homeassistant-supervised.deb
-**Orange Pi (Armbian)
+
+**กรณีที่เราติดตั้งบนกล่อง Android TV หรือ ติดตั้งบนบอร์ด Orange Pi (ระบบปฏิบัติการเป็น Armbian)
 ถ้ามี Error "[error] Armbian 24.2.1 bookworm is not supported!" 
 ให้แก้ไฟล์
 #nano /etc/os-release
@@ -43,8 +44,10 @@ PRETTY_NAME="Debian GNU/Linux 11 (bullseye)"
 #dpkg -i homeassistant-supervised.deb
 
 8. เลือกเมนู raspberrypi4-64 >> Enter  
-**Orange Pi (Armbian)
+
+**กรณีที่เราติดตั้งบนกล่อง Android TV หรือ ติดตั้งบนบอร์ด Orange Pi (ระบบปฏิบัติการเป็น Armbian)
 เลือกเมนู qemuarm >> Enter (armv7,32bit)  
+
 เสร็จแล้วรอประมาณ 20 นาที
 http://ip-server:8123
 set hostname
