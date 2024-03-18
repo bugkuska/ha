@@ -1,0 +1,54 @@
+#วางต่อจาก captive_portal:
+uart:
+  id: mod_bus
+  tx_pin: 17
+  rx_pin: 16
+  baud_rate: 9600
+  stop_bits: 1
+  parity: none
+  data_bits: 8
+
+modbus:
+  id: modbus_relay
+
+modbus_controller:
+#Modbus RTU Relay Slave ID 3
+  - id: mbid3
+    address: 0x3
+    modbus_id: modbus_relay
+    setup_priority: -10
+    update_interval: 30s
+switch:
+# Modbus device addr slave id3 - Modbus Relay
+  - platform: modbus_controller
+    modbus_controller_id: mbid3
+    id: MB2_SW1
+    name: "MB2_SW1"
+    address: 0x00
+    register_type: coil
+    bitmask: 0xFF
+
+  - platform: modbus_controller
+    modbus_controller_id: mbid3
+    id: MB2_SW2
+    name: "MB2_SW2"
+    address: 0x01
+    register_type: coil
+    bitmask: 0xFF
+
+  - platform: modbus_controller
+    modbus_controller_id: mbid3
+    id: MB2_SW3
+    name: "MB2_SW3"
+    address: 0x02
+    register_type: coil
+    bitmask: 0xFF
+
+  - platform: modbus_controller
+    modbus_controller_id: mbid3
+    id: MB2_SW4
+    name: "MB2_SW4"
+    address: 0x03
+    register_type: coil
+    bitmask: 0xFF 
+    
