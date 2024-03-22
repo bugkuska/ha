@@ -26,7 +26,7 @@ switch:
     name: "MB2_SW1"
     address: 0x00
     register_type: coil
-    bitmask: 0xFF
+    bitmask: 0x00
 
   - platform: modbus_controller
     modbus_controller_id: mbid3
@@ -34,7 +34,7 @@ switch:
     name: "MB2_SW2"
     address: 0x01
     register_type: coil
-    bitmask: 0xFF
+    bitmask: 0x00
 
   - platform: modbus_controller
     modbus_controller_id: mbid3
@@ -42,7 +42,7 @@ switch:
     name: "MB2_SW3"
     address: 0x02
     register_type: coil
-    bitmask: 0xFF
+    bitmask: 0x00
 
   - platform: modbus_controller
     modbus_controller_id: mbid3
@@ -50,5 +50,5 @@ switch:
     name: "MB2_SW4"
     address: 0x03
     register_type: coil
-    bitmask: 0xFF 
+    bitmask: 0x00
     
