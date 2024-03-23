@@ -1,3 +1,17 @@
+1. Download armbian จาก 
+https://www.armbian.com/orangepi3b/
+ตัวอย่างผมเลือกเป็น Armbian Bookworm>>Minimal (เราไม่จำเป็นต้องเลือกที่เป็น Gnome Desktop เพราะเราจะใช้แบบ command เพื่อประหยัดทรัพยากรของบอร์ด Orange Pi)
+
+2. หลังจาก Download เสร็จให้เตรียม SD-Card 
+Download และติดตั้ง SD-Card Formatter จาก https://www.sdcard.org/downloads/formatter/sd-memory-card-formatter-for-windows-download/ 
+3. Download และติดตั้ง Balena Etcher จาก https://etcher.balena.io/ 
+
+หลังจากเตรียม SD-Card เสร็จ ถอด SD-Card ต่อเข้าบอร์ด Orange Pi3
+ต่อสายแลน ต่อไฟเลี้ยง และใช้โปรแกรม IP Scan เพื่อตรวจหาหมายเลข IP Address สำหรับนำมาใช้่ในการ Remote เข้าเครื่องผ่าน putty 
+putty download ได้จาก https://the.earth.li/~sgtatham/putty/latest/w64/putty.exe
+
+หลังจาก Remote ได้ให้ทำดังต่อไปนี้
+
 1.Update ระบบ 
 #apt update
 2. ติดตั้ง software เพิ่มเติม 
