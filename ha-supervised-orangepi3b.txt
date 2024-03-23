@@ -1,3 +1,6 @@
+Orange PI3 B
+http://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/service-and-support/Orange-Pi-3B.html
+
 1. Download armbian จาก 
 https://www.armbian.com/orangepi3b/
 ตัวอย่างผมเลือกเป็น Armbian Bookworm>>Minimal (เราไม่จำเป็นต้องเลือกที่เป็น Gnome Desktop เพราะเราจะใช้แบบ command เพื่อประหยัดทรัพยากรของบอร์ด Orange Pi)
