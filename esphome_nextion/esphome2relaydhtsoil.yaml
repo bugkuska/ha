@@ -1,0 +1,83 @@
+esphome:
+  name: esp32nextion01
+  friendly_name: esp32nextion01
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "8JQ7y069l8g4r+nXR/uZnxsk3GvXl+wUayRQUz8X3gA="
+
+# Firmware over the air
+ota:
+  password: "343526f6ad63d27bf5bc1364e7f9f68b"
+
+# Wi-Fi Credentials
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+# Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Esp32Nextion01 Fallback Hotspot"
+    password: "kxlpDk8mU57H"
+
+captive_portal:
+
+#HA-ESPHome 2CH Relay 
+switch:
+  - platform: gpio
+    id: relay1
+    name: "Switch1"
+    pin: 32
+    restore_mode: RESTORE_DEFAULT_OFF
+    inverted: true
+
+  - platform: gpio
+    id: relay2
+    name: "Switch2"
+    pin: 33
+    restore_mode: RESTORE_DEFAULT_OFF
+    inverted: true
+    #restore_mode: RESTORE_default_ON
+
+#HA-ESPHome Digital & Analog Sensor
+sensor:
+  #DHT11/DHT22
+  - platform: dht
+    pin: 18
+    temperature:
+      name: "DHT11/DHT22 Temperature"
+      id: dhttemp
+    humidity:
+      name: "DHT11/DHT22 Humidity"
+      id: dhthumi
+    update_interval: 10s
+  
+  #SoilMoisture Sensor
+  - platform: adc
+    pin: 35
+    
+    filters:
+      - lambda: |-
+          if (x > 3.15) {
+            return 0;
+          } else if (x < 1.30) {
+            return 100;
+          } else {
+            return (3.15-x) / (3.15-1.30) * 100.0;
+          }
+    name: "Soil Moisture Level"
+    unit_of_measurement: "%"
+    id: asoil
+    device_class: humidity
+    icon: "mdi:watering-can"
+    update_interval: 2s
+    attenuation: auto
+    accuracy_decimals: 0
