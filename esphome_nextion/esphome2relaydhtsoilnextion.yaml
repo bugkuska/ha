@@ -1,3 +1,51 @@
+esphome:
+  name: esp32nextion01
+  friendly_name: esp32nextion01
+
+  on_boot:
+    priority: -180
+    then:
+      - lambda: |-
+          id(page1).publish_state(true);
+          id(page2).publish_state(false);
+          id(page3).publish_state(false);
+          id(page4).publish_state(false);
+          id(page5).publish_state(false);
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "8JQ7y069l8g4r+nXR/uZnxsk3GvXl+wUayRQUz8X3gA="
+
+# Firmware over the air
+ota:
+  password: "343526f6ad63d27bf5bc1364e7f9f68b"
+
+#Time services
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: Asia/Bangkok
+
+# Wi-Fi Credentials
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+# Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Esp32Nextion01 Fallback Hotspot"
+    password: "kxlpDk8mU57H"
+
+captive_portal:
 
 #Serial port setting
 uart:
