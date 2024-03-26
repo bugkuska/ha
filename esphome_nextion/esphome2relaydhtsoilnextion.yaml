@@ -1,0 +1,216 @@
+
+#Serial port setting
+uart:
+  - id: uart_2
+    rx_pin: GPIO26
+    tx_pin: GPIO27
+    baud_rate: 9600    
+
+#Display setting
+display:
+  - platform: nextion
+    id: nextiondisplay
+    uart_id: uart_2
+    update_interval: 60s
+    lambda: |-
+            it.set_wait_for_ack(false);
+
+            auto date = id(sntp_time).now().strftime("%b. %d");
+            auto time = id(sntp_time).now();
+
+            if (id(page1).state) {
+              it.set_component_text_printf("homescreen.time","%02d:%02d",time.hour,time.minute);
+              it.set_component_text("homescreen.date", date.c_str());       
+            }
+            if (id(page2).state) {
+
+            }
+
+            if (id(page3).state) {
+              it.send_command_printf("swcontrol.bt0.val=%d",id(relay1).state);
+              it.send_command_printf("swcontrol.bt1.val=%d",id(relay2).state);
+            }
+            if (id(page4).state) {
+              it.set_component_text_printf("temphumi.txttemp1","%2f",id(dhttemp).state);
+              it.set_component_text_printf("temphumi.txthumi1","%2f",id(dhthumi).state);
+            }  
+            if (id(page5).state){
+              it.set_component_text_printf("soil.txtsoil","%2f",id(asoil).state);
+            }
+
+#HA-ESPHome 2CH Relay 
+switch:
+  - platform: gpio
+    id: relay1
+    name: "Switch1"
+    pin: 32
+    restore_mode: RESTORE_DEFAULT_OFF
+    inverted: true
+
+  - platform: gpio
+    id: relay2
+    name: "Switch2"
+    pin: 33
+    restore_mode: RESTORE_DEFAULT_OFF
+    inverted: true
+    #restore_mode: RESTORE_default_ON
+
+#HA-ESPHome Digital & Analog Sensor
+sensor:
+  #DHT11/DHT22
+  - platform: dht
+    pin: 18
+    temperature:
+      name: "DHT11/DHT22 Temperature"
+      id: dhttemp
+    humidity:
+      name: "DHT11/DHT22 Humidity"
+      id: dhthumi
+    update_interval: 10s
+  
+  #SoilMoisture Sensor
+  - platform: adc
+    pin: 35
+    
+    filters:
+      - lambda: |-
+          if (x > 3.15) {
+            return 0;
+          } else if (x < 1.30) {
+            return 100;
+          } else {
+            return (3.15-x) / (3.15-1.30) * 100.0;
+          }
+    name: "Soil Moisture Level"
+    unit_of_measurement: "%"
+    id: asoil
+    device_class: humidity
+    icon: "mdi:watering-can"
+    update_interval: 2s
+    attenuation: auto
+    accuracy_decimals: 0
+
+#HA-Nextion sensor data display
+#Temperature
+  - platform: homeassistant  
+    id: ha_dhttemp
+    entity_id: sensor.esp32nextion01_dht11_dht22_temperature
+    accuracy_decimals: 0
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("temphumi.txttemp","%2f",id(ha_dhttemp).state);'
+#Humidity
+  - platform: homeassistant  
+    id: ha_dhthumi
+    entity_id: sensor.esp32nextion01_dht11_dht22_humidity
+    accuracy_decimals: 0
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("temphumi.txthumi","%2f",id(ha_dhthumi).state);'
+#Soil Moisture
+  - platform: homeassistant  
+    id: ha_soil
+    entity_id: sensor.esp32nextion01_soil_moisture_level
+    accuracy_decimals: 0
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("soil.txtsoil","%2f",id(ha_soil).state);'
+
+
+#Binary sensors-HA and nextion read &  write
+binary_sensor:   
+#Read from Nextion Touch Screen  
+  - platform: homeassistant   # Switch1
+    id: sw1
+    entity_id: switch.esp32nextion01_switch1 
+    on_state:
+       then:
+         - lambda: 'id(nextiondisplay).send_command_printf("swcontrol.bt0.val=%d",id(sw1).state);'  
+      
+  - platform: homeassistant   # Switch2
+    id: sw2
+    entity_id: switch.esp32nextion01_switch2
+    on_state:
+       then:
+         - lambda: 'id(nextiondisplay).send_command_printf("swcontrol.bt1.val=%d",id(sw2).state);'     
+#Toggle from Nextion Touch Screen          
+#swcontrol SW1
+  - platform: nextion
+    page_id: 2
+    component_id: 2
+    id: ha_sw1
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esp32nextion01_switch1      
+    on_release:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esp32nextion01_switch1
+#swcontrol SW2
+  - platform: nextion
+    page_id: 2
+    component_id: 3
+    id: ha_sw2
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esp32nextion01_switch2   
+    on_release:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esp32nextion01_switch2
+
+#Page on nextion tft touch screen
+# 1. page - HomeScreen
+  - platform: nextion
+    page_id: 0
+    component_id: 2
+    id: page1
+    on_press:
+      then:
+        - component.update: nextiondisplay
+
+# 2. page - Lockscreen
+  - platform: nextion
+    page_id: 1
+    component_id: 2
+    id: page2
+    on_press:
+      then:
+        - component.update: nextiondisplay
+        
+  # 3. page - swcontrol
+  - platform: nextion
+    page_id: 2
+    component_id: 2
+    id: page3
+    on_press:
+      then:
+        - component.update: nextiondisplay
+        
+  # 4. page - temphumi 
+  - platform: nextion
+    page_id: 3
+    component_id: 3
+    id: page4
+    on_press:
+      then:
+        - component.update: nextiondisplay
+        
+# 5. page - soil
+  - platform: nextion
+    page_id: 4
+    component_id: 5
+    id: page5
+    on_press:
+      then:
+        - component.update: nextiondisplay
