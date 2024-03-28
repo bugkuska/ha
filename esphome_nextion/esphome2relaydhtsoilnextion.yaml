@@ -146,7 +146,7 @@ sensor:
     accuracy_decimals: 0
     on_value:
        then:
-          - lambda: 'id(nextiondisplay).set_component_text_printf("temphumi.txttemp","%2f",id(ha_dhttemp).state);'
+          - lambda: 'id(nextiondisplay).set_component_text_printf("temphumi.txttemp1","%2f",id(ha_dhttemp).state);'
 #Humidity
   - platform: homeassistant  
     id: ha_dhthumi
@@ -154,7 +154,7 @@ sensor:
     accuracy_decimals: 0
     on_value:
        then:
-          - lambda: 'id(nextiondisplay).set_component_text_printf("temphumi.txthumi","%2f",id(ha_dhthumi).state);'
+          - lambda: 'id(nextiondisplay).set_component_text_printf("temphumi.txthumi1","%2f",id(ha_dhthumi).state);'
 #Soil Moisture
   - platform: homeassistant  
     id: ha_soil
