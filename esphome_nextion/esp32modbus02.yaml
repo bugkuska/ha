@@ -1,0 +1,123 @@
+esphome:
+  name: esp32modbus01
+  friendly_name: esp32modbus01
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "Q1vtxiuxd/RMNU74TU8r5n8dw6oXZbk1vVgvTUTILqo="
+
+ota:
+  password: "7effea350428952d68b10483fee72cd5"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Esp32Modbus01 Fallback Hotspot"
+    password: "uo8YSkRwk3XJ"
+
+captive_portal:
+
+uart:
+  id: mod_bus
+  tx_pin: 17
+  rx_pin: 16
+  baud_rate: 9600
+  stop_bits: 1
+  parity: none
+  data_bits: 8
+
+#Modbus Sensor & Modbus Relay
+modbus:
+  flow_control_pin: 5
+  id: modbus_sensor
+
+modbus_controller:
+# Modbus device addr slave id1 - Modbus XY-MD02 Temp & Humi
+  - id: xymd02_01
+    address: 0x1
+    modbus_id: modbus_sensor
+    command_throttle: 200ms
+    setup_priority: -10
+    update_interval: 10s
+
+# Modbus device addr slave id3 - Modbus Relay
+  - id: mbid3
+    address: 0x3
+    modbus_id: modbus_sensor
+    setup_priority: -10
+    update_interval: 30s
+
+sensor:
+  # Modbus device addr slave id1
+    #TEMP sensor
+  - platform: modbus_controller
+    modbus_controller_id: xymd02_01
+    id: temperature2
+    name: "TEMP2"
+    device_class: TEMPERATURE
+    address: 0x001
+    unit_of_measurement: "°C"
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.1
+  #HUMI sensor
+  - platform: modbus_controller
+    modbus_controller_id: xymd02_01
+    id: humidity2
+    name: "HUMI2"
+    device_class: HUMIDITY
+    address: 0x002
+    unit_of_measurement: "%"
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.1  
+      
+switch:
+# Modbus device addr slave id3 - Modbus Relay
+  - platform: modbus_controller
+    modbus_controller_id: mbid3
+    id: MB2_SW1
+    name: "MB2_SW1"
+    address: 0x00
+    register_type: coil
+    bitmask: 0xFF
+
+  - platform: modbus_controller
+    modbus_controller_id: mbid3
+    id: MB2_SW2
+    name: "MB2_SW2"
+    address: 0x01
+    register_type: coil
+    bitmask: 0xFF
+
+  - platform: modbus_controller
+    modbus_controller_id: mbid3
+    id: MB2_SW3
+    name: "MB2_SW3"
+    address: 0x02
+    register_type: coil
+    bitmask: 0xFF
+
+  - platform: modbus_controller
+    modbus_controller_id: mbid3
+    id: MB2_SW4
+    name: "MB2_SW4"
+    address: 0x03
+    register_type: coil
+    bitmask: 0xFF   
