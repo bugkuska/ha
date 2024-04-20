@@ -1,0 +1,407 @@
+esphome:
+  name: esp32nextion04
+  friendly_name: esp32nextion04
+
+  on_boot:
+    priority: -180
+    then:
+      - lambda: |-
+          id(page1).publish_state(true);
+          id(page2).publish_state(false);
+          id(page3).publish_state(false);
+          id(page4).publish_state(false);
+          id(page5).publish_state(false);
+          id(page6).publish_state(false);
+          id(page7).publish_state(false);
+          
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "pVI6/pnFAoV5a7cOkeQb7vF5Zsj81c1qVbFLXTHK1vs="
+
+#Time services
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: Asia/Bangkok
+
+ota:
+  password: "d88577a848d253219034d13be9e5a3a0"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Esp32Nextion04 Fallback Hotspot"
+    password: "gDU1d3WIKWgP"
+
+captive_portal:
+
+#Serial port setting
+uart:
+  - id: uart_2
+    rx_pin: GPIO26
+    tx_pin: GPIO27
+    baud_rate: 9600    
+
+#Display setting
+display:
+  - platform: nextion
+    id: nextiondisplay
+    uart_id: uart_2
+    update_interval: 60s
+    lambda: |-
+            it.set_wait_for_ack(false);
+
+            auto date = id(sntp_time).now().strftime("%b. %d");
+            auto time = id(sntp_time).now();
+
+            if (id(page1).state) {
+              it.set_component_text_printf("homescreen.time","%02d:%02d",time.hour,time.minute);
+              it.set_component_text("homescreen.date", date.c_str());       
+            }
+            if (id(page2).state) {
+
+            }
+
+            if (id(page3).state) {
+              it.send_command_printf("swcontrol.bt0.val=%d",id(relay1).state);
+              it.send_command_printf("swcontrol.bt1.val=%d",id(relay2).state);
+            }
+            if (id(page4).state) {
+              it.set_component_text_printf("temphumi.txttemp1","%2f",id(dhttemp).state);
+              it.set_component_text_printf("temphumi.txthumi1","%2f",id(dhthumi).state);
+            }  
+            if (id(page5).state){
+              it.set_component_text_printf("soil.txtsoil","%2f",id(asoil).state);
+            }
+            
+            if (id(page6).state){
+              it.send_command_printf("mbrelay.bt0.val=%d",id(mbrelay1).state);                  
+              it.send_command_printf("mbrelay.bt1.val=%d",id(mbrelay2).state);
+              it.send_command_printf("mbrelay.bt2.val=%d",id(mbrelay3).state);
+              it.send_command_printf("mbrelay.bt3.val=%d",id(mbrelay4).state); 
+            }
+            if (id(page7).state){
+              it.set_component_text_printf("mbxymd02.txtmbhumi1","%2f",id(xy_humi1).state); 
+              it.set_component_text_printf("mbxymd02.txtmbtemp1","%2f",id(xy_temp1).state); 
+            }
+
+#HA-ESPHome 2CH Relay 
+switch:
+  - platform: gpio
+    id: relay1
+    name: "Switch1"
+    pin: 32
+    restore_mode: RESTORE_DEFAULT_OFF
+    #inverted: true
+
+  - platform: gpio
+    id: relay2
+    name: "Switch2"
+    pin: 33
+    restore_mode: RESTORE_DEFAULT_OFF
+    #inverted: true
+    #restore_mode: RESTORE_default_ON
+
+#HA-ESPHome Digital & Analog Sensor
+sensor:
+  #DHT11/DHT22
+  - platform: dht
+    pin: 18
+    temperature:
+      name: "DHT11/DHT22 Temperature"
+      id: dhttemp
+    humidity:
+      name: "DHT11/DHT22 Humidity"
+      id: dhthumi
+    update_interval: 10s
+  
+  #SoilMoisture Sensor
+  - platform: adc
+    pin: 35
+    
+    filters:
+      - lambda: |-
+          if (x > 3.15) {
+            return 0;
+          } else if (x < 1.30) {
+            return 100;
+          } else {
+            return (3.15-x) / (3.15-1.30) * 100.0;
+          }
+    name: "Soil Moisture Level"
+    unit_of_measurement: "%"
+    id: asoil
+    device_class: humidity
+    icon: "mdi:watering-can"
+    update_interval: 2s
+    attenuation: auto
+    accuracy_decimals: 0
+
+#HA-Nextion sensor data display
+#Temperature
+  - platform: homeassistant  
+    id: ha_dhttemp
+    entity_id: sensor.esp32nextion04_dht11_dht22_temperature
+    accuracy_decimals: 0
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("temphumi.txttemp1","%2f",id(ha_dhttemp).state);'
+#Humidity
+  - platform: homeassistant  
+    id: ha_dhthumi
+    entity_id: sensor.esp32nextion04_dht11_dht22_humidity
+    accuracy_decimals: 0
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("temphumi.txthumi1","%2f",id(ha_dhthumi).state);'
+#Soil Moisture
+  - platform: homeassistant  
+    id: ha_soil
+    entity_id: sensor.esp32nextion04_soil_moisture_level
+    accuracy_decimals: 0
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("soil.txtsoil","%2f",id(ha_soil).state);'
+
+# XY-MD02 Temperature
+  - platform: homeassistant   
+    id: xy_temp1
+    entity_id: sensor.esp32modbus01_temp2
+    accuracy_decimals: 1
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("mbxymd02.txtmbtemp1","%2f",id(xy_temp1).state);'
+
+  - platform: homeassistant   # XY-MD02 Humidity
+    id: xy_humi1
+    entity_id: sensor.esp32modbus01_humi2
+    accuracy_decimals: 1
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("mbxymd02.txtmbhumi1","%2f",id(xy_humi1).state);'
+
+#Binary sensors-HA and nextion read &  write
+binary_sensor:   
+#Read from Nextion Touch Screen  
+  - platform: homeassistant   # Switch1
+    id: sw1
+    entity_id: switch.esp32nextion04_switch1
+    on_state:
+       then:
+         - lambda: 'id(nextiondisplay).send_command_printf("swcontrol.bt0.val=%d",id(sw1).state);'  
+      
+  - platform: homeassistant   # Switch2
+    id: sw2
+    entity_id: switch.esp32nextion04_switch2
+    on_state:
+       then:
+         - lambda: 'id(nextiondisplay).send_command_printf("swcontrol.bt1.val=%d",id(sw2).state);'     
+#Toggle from Nextion Touch Screen          
+#swcontrol SW1
+  - platform: nextion
+    page_id: 2
+    component_id: 2
+    id: ha_sw1
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esp32nextion04_switch1     
+    on_release:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esp32nextion04_switch1
+#swcontrol SW2
+  - platform: nextion
+    page_id: 2
+    component_id: 3
+    id: ha_sw2
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esp32nextion04_switch2  
+    on_release:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esp32nextion04_switch2
+
+#4CH Modbus Relay
+  - platform: homeassistant   # MBRelay Sw1
+    id: mbrelay1
+    entity_id: switch.esp32modbus01_mb2_sw1
+    on_state:
+       then:
+         - lambda: 'id(nextiondisplay).send_command_printf("mbrelay.bt0.val=%d",id(mbrelay1).state);'  
+      
+  - platform: homeassistant   # MBRelay Sw2
+    id: mbrelay2
+    entity_id: switch.esp32modbus01_mb2_sw2
+    on_state:
+       then:
+         - lambda: 'id(nextiondisplay).send_command_printf("mbrelay.bt1.val=%d",id(mbrelay2).state);'     
+         
+  - platform: homeassistant   # MBRelay Sw3
+    id: mbrelay3
+    entity_id: switch.esp32modbus01_mb2_sw3
+    on_state:
+       then:
+         - lambda: 'id(nextiondisplay).send_command_printf("mbrelay.bt2.val=%d",id(mbrelay3).state);'  
+
+  - platform: homeassistant   # MBRelay Sw4
+    id: mbrelay4
+    entity_id: switch.esp32modbus01_mb2_sw4
+    on_state:
+       then:
+         - lambda: 'id(nextiondisplay).send_command_printf("mbrelay.bt3.val=%d",id(mbrelay4).state);' 
+
+#MBRelay SW1
+  - platform: nextion
+    page_id: 5
+    component_id: 2
+    id: modbusrelay1
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esp32modbus01_mb2_sw1     
+    on_release:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esp32modbus01_mb2_sw1 
+#MBRelay SW2
+  - platform: nextion
+    page_id: 5
+    component_id: 3
+    id: modbusrelay2
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esp32modbus01_mb2_sw2   
+    on_release:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esp32modbus01_mb2_sw2  
+#MBRelay SW3
+  - platform: nextion
+    page_id: 5
+    component_id: 4
+    id: modbusrelay3
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esp32modbus01_mb2_sw3
+    on_release:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esp32modbus01_mb2_sw3
+#MBRelay SW4
+  - platform: nextion
+    page_id: 5
+    component_id: 5
+    id: modbusrelay4
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esp32modbus01_mb2_sw4
+    on_release:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esp32modbus01_mb2_sw4
+
+#Page on nextion tft touch screen
+# 1. page - HomeScreen
+  - platform: nextion
+    page_id: 0
+    component_id: 2
+    id: page1
+    on_press:
+      then:
+        - component.update: nextiondisplay
+
+# 2. page - Lockscreen
+  - platform: nextion
+    page_id: 1
+    component_id: 2
+    id: page2
+    on_press:
+      then:
+        - component.update: nextiondisplay
+        
+  # 3. page - swcontrol
+  - platform: nextion
+    page_id: 2
+    component_id: 2
+    id: page3
+    on_press:
+      then:
+        - component.update: nextiondisplay
+        
+  # 4. page - temphumi 
+  - platform: nextion
+    page_id: 3
+    component_id: 3
+    id: page4
+    on_press:
+      then:
+        - component.update: nextiondisplay
+        
+# 5. page - soil
+  - platform: nextion
+    page_id: 4
+    component_id: 5
+    id: page5
+    on_press:
+      then:
+        - component.update: nextiondisplay    
+
+# 6. page - 4ch Modbus Relay
+  - platform: nextion
+    page_id: 5
+    component_id: 5
+    id: page6
+    on_press:
+      then:
+        - component.update: nextiondisplay    
+
+# 7. page - Modbus Temp&Humi XY-MD02
+  - platform: nextion
+    page_id: 6
+    component_id: 5
+    id: page7
+    on_press:
+      then:
+        - component.update: nextiondisplay 
