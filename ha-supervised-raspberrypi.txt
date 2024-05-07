@@ -30,7 +30,9 @@ systemd-resolved udisks2 wget -y
 wget https://github.com/home-assistant/supervised-installer/releases/download/1.7.0/homeassistant-supervised.deb
 #dpkg -i homeassistant-supervised.deb
 
-8. เลือกเมนู qemuarm-64 >> Enter  
+8. เลือกเมนู 
+ถ้าเป็น raspberry pi 4 เลือก raspberrypi4-64  >> Enter
+ถ้าเป็น raspberry pi 5 เลือก raspberrypi5-64  >> Enter  
 
 เสร็จแล้วรอประมาณ 20 นาที
 http://ip-server:8123
