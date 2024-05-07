@@ -51,7 +51,10 @@ systemd-resolved udisks2 wget -y
 #nano /etc/os-release
 PRETTY_NAME="Armbian 23.11.0-trunk lunar"
 แก้เป็น
+
 PRETTY_NAME="Debian GNU/Linux 11 (bullseye)"
+หรือ
+PRETTY_NAME="Debian GNU/Linux 12 (bookworm)"
 บันทึกและออกจาก nano
 
 แล้ว Run คำสั่งติดตั้ง supervised อีกรอบ
