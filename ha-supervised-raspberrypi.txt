@@ -1,5 +1,5 @@
 Raspberry pi3b, 4b และ 5b
-  
+ติดตั้ง OS แบบ Raspberry pi OS (Other) >   Raspberry Pi OS Lite (64bit)
 หลังจาก Remote ได้ให้ทำดังต่อไปนี้
 
 1.Update ระบบ 
