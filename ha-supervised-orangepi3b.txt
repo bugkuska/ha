@@ -40,7 +40,10 @@ systemd-resolved udisks2 wget -y
 #dpkg -i os-agent_1.6.0_linux_aarch64.deb
 
 7.Download และติดตั้ง homeassistant-supervised
-#wget https://github.com/home-assistant/supervised-installer/releases/download/1.5.0/homeassistant-supervised.deb
+#wget https://github.com/home-assistant/supervised-installer/releases/download/1.6.0/homeassistant-supervised.debb
+หรือ
+wget https://github.com/home-assistant/supervised-installer/releases/download/1.7.0/homeassistant-supervised.deb
+
 #dpkg -i homeassistant-supervised.deb
 
 ถ้ามี Error "[error] Armbian 24.2.1 bookworm is not supported!" 
