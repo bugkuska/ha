@@ -1,6 +1,12 @@
 1. Download armbian for Orange Pi Zero 3
 https://www.armbian.com/orange-pi-zero-3/
 
+Option1: Dedicated applications
+https://github.com/armbian/distribution/releases/download/24.2.2/Armbian_24.2.2_Orangepizero3_bookworm_current_6.6.24-homeassistant_minimal.img.xz
+หรือ 
+Option2: Community releases
+https://github.com/armbian/community/releases/download/24.5.0-trunk.532/Armbian_community_24.5.0-trunk.532_Orangepizero3_bookworm_current_6.6.30_minimal.img.xz
+
 2. เตรียม SD-Card 
 Download และติดตั้ง SD-Card Formatter จาก https://www.sdcard.org/downloads/formatter/sd-memory-card-formatter-for-windows-download/ 
 3. Download และติดตั้ง Balena Etcher จาก https://etcher.balena.io/ 
@@ -19,6 +25,7 @@ Download และติดตั้ง SD-Card Formatter จาก https://www.
 #apt install net-tools  
 7.Upgrade ระบบ
 #apt upgrade 
+
 8.ติดตั้ง software ที่จำเป็น 
 #apt install apparmor \
 cifs-utils curl dbus jq \
