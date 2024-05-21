@@ -1,7 +1,7 @@
 1. Download armbian for Orange Pi Zero 3
 https://www.armbian.com/orange-pi-zero-3/
 
-Option1: Dedicated applications (ทำถึงข้อที่ 7)
+Option1: Dedicated applications (ทำถึงข้อที่ 7 แล้วรอประมาณ 20 นาที เปิดบราวเซอร์ http://ip-server:8123 )
 https://github.com/armbian/distribution/releases/download/24.2.2/Armbian_24.2.2_Orangepizero3_bookworm_current_6.6.24-homeassistant_minimal.img.xz
 หรือ 
 Option2: Community releases (ทำตั้งแต่ข้อที่ 1 - 12)
