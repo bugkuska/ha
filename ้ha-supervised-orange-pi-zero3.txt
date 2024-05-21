@@ -1,10 +1,10 @@
 1. Download armbian for Orange Pi Zero 3
 https://www.armbian.com/orange-pi-zero-3/
 
-Option1: Dedicated applications
+Option1: Dedicated applications (ทำถึงข้อที่ 7)
 https://github.com/armbian/distribution/releases/download/24.2.2/Armbian_24.2.2_Orangepizero3_bookworm_current_6.6.24-homeassistant_minimal.img.xz
 หรือ 
-Option2: Community releases
+Option2: Community releases (ทำตั้งแต่ข้อที่ 1 - 12)
 https://github.com/armbian/community/releases/download/24.5.0-trunk.532/Armbian_community_24.5.0-trunk.532_Orangepizero3_bookworm_current_6.6.30_minimal.img.xz
 
 2. เตรียม SD-Card 
