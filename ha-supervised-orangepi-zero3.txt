@@ -25,8 +25,8 @@ Download และติดตั้ง SD-Card Formatter จาก https://www.
 #apt install net-tools  
 7.Upgrade ระบบ
 #apt upgrade 
-
-****Option1 หลังจาก upgrade เสร็จให้รอประมาณ 20 นาที แล้วเอา ip-address ของบอร์ดไปเปิดที่เว็บบราวเซอร์ เช่น http://ip-address:8123
+#reboot
+****Option1 หลังจาก upgrade และ reboot เสร็จให้รอประมาณ 20 นาที แล้วเอา ip-address ของบอร์ดไปเปิดที่เว็บบราวเซอร์ เช่น http://ip-address:8123
 
 ****Option2 ทำต่อไปจนถึงข้อที่ 12
 
