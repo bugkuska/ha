@@ -26,6 +26,10 @@ Download และติดตั้ง SD-Card Formatter จาก https://www.
 7.Upgrade ระบบ
 #apt upgrade 
 
+****Option1 หลังจาก upgrade เสร็จให้รอประมาณ 20 นาที แล้วเอา ip-address ของบอร์ดไปเปิดที่เว็บบราวเซอร์ เช่น http://ip-address:8123
+
+****Option2 ทำต่อไปจนถึงข้อที่ 12
+
 8.ติดตั้ง software ที่จำเป็น 
 #apt install apparmor \
 cifs-utils curl dbus jq \
