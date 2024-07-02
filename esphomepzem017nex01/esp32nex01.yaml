@@ -9,8 +9,6 @@ esphome:
           id(page1).publish_state(true);
           id(page2).publish_state(true);
           id(page3).publish_state(false);
-          id(page4).publish_state(false);
-          id(page5).publish_state(false);
 
 esp32:
   board: esp32dev
