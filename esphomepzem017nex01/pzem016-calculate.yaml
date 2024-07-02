@@ -121,3 +121,18 @@ sensor:
         {{  states('sensor.base_cost_services_charge') | float + states('sensor.ft_cost') | float + states('sensor.vat_7_percent') | float | round(2) }}
       icon_template: >
         mdi:transmission-tower 
+        
+utility_meter:
+  daily_energy:
+    source: sensor.esp32pzem01_total_daily_energy
+    cycle: daily
+    offset:
+      hours: 0
+      minutes: 0 
+  monthly_energy:
+    source: sensor.esp32pzem01_total_daily_energy
+    cycle: monthly
+    offset:
+      days: 1
+      hours: 0
+      minutes: 0
