@@ -1,1 +1,192 @@
-update later
+esphome:
+  name: esp32nex01
+  friendly_name: esp32nex01
+  
+  on_boot:
+    priority: -180
+    then:
+      - lambda: |-
+          id(page1).publish_state(true);
+          id(page2).publish_state(true);
+          id(page3).publish_state(false);
+          id(page4).publish_state(false);
+          id(page5).publish_state(false);
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "TZl5q3XPXbmFz96xccFgEPBXZdB7p8iTXdaXgHhCGhQ="
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+#Time services
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: Asia/Bangkok
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  power_save_mode: none
+  
+  manual_ip:
+    # Set this to the IP of the ESP
+    static_ip: 192.168.1.92
+    # Set this to the IP address of the router. Often ends with .1
+    gateway: 192.168.1.1
+    # The subnet of the network. 255.255.255.0 works for most home networks.
+    subnet: 255.255.255.0
+    dns1: 192.168.1.1
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Esp32Nex01 Fallback Hotspot"
+    password: "0814111142"
+
+captive_portal:
+
+#Serial port setting
+uart:
+  - id: uart_2
+    rx_pin: GPIO16
+    tx_pin: GPIO17
+    baud_rate: 9600    
+
+#Display setting
+display:
+  - platform: nextion
+    id: nextiondisplay
+    uart_id: uart_2
+    update_interval: 60s
+    lambda: |-
+            it.set_wait_for_ack(false);
+
+            auto date = id(sntp_time).now().strftime("%b. %d");
+            auto time = id(sntp_time).now();
+
+            if (id(page1).state) {
+    
+            }
+
+            if (id(page2).state) {
+              it.set_component_text_printf("Lockscreen.time","%02d:%02d",time.hour,time.minute);
+              it.set_component_text("Lockscreen.date", date.c_str());        
+            }
+
+            if (id(page3).state) {
+              it.set_component_text_printf("Powermon.txtvolt","%2f",id(pzvoltage).state);
+              it.set_component_text_printf("Powermon.txtam","%2f",id(pzcurrent).state);
+
+              it.set_component_text_printf("Powermon.txthz","%2f",id(pzhz).state);
+              it.set_component_text_printf("Powermon.txtenergy","%2f",id(pzenergy).state);
+              it.set_component_text_printf("Powermon.txtpower","%2f",id(pzpower).state);
+              it.set_component_text_printf("Powermon.txtpf","%2f",id(pzpf).state);
+              it.set_component_text_printf("Powermon.txtentotal","%2f",id(pzentotal).state);
+              it.set_component_text_printf("Powermon.txtmonthbill","%2f",id(pzmonthbill).state);
+            }
+
+sensor:
+#HA-Nextion sensor data display
+# Pzem016 
+  - platform: homeassistant   # Voltage
+    id: pzvoltage
+    entity_id: sensor.esp32powermon01_voltage
+    accuracy_decimals: 1
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("Powermon.txtvolt","%2f",id(pzvoltage).state);'
+
+  - platform: homeassistant   # Current
+    id: pzcurrent
+    entity_id: sensor.esp32powermon01_current
+    accuracy_decimals: 1
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("Powermon.txtam","%2f",id(pzcurrent).state);'
+
+  - platform: homeassistant   # Hz
+    id: pzhz
+    entity_id: sensor.esp32powermon01_frequency
+    accuracy_decimals: 1
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("Powermon.txthz","%2f",id(pzhz).state);'
+
+  - platform: homeassistant   # Daily Energy
+    id: pzenergy
+    entity_id: sensor.esp32powermon01_total_daily_energy
+    accuracy_decimals: 1
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("Powermon.txtenergy","%2f",id(pzenergy).state);'
+
+  - platform: homeassistant   # Power
+    id: pzpower
+    entity_id: sensor.esp32powermon01_power
+    accuracy_decimals: 1
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("Powermon.txtpower","%2f",id(pzpower).state);'
+
+  - platform: homeassistant   # Power Factor
+    id: pzpf
+    entity_id: sensor.esp32powermon01_power_factor
+    accuracy_decimals: 1
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("Powermon.txtpf","%2f",id(pzpf).state);'
+
+  - platform: homeassistant   # Monthly Energy
+    id: pzentotal
+    entity_id: sensor.monthly_energy2
+    accuracy_decimals: 1
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("Powermon.txtentotal","%2f",id(pzentotal).state);'
+
+  - platform: homeassistant   # Monthly Bill
+    id: pzmonthbill
+    entity_id: sensor.total_cost2
+    accuracy_decimals: 1
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("Powermon.txtmonthbill","%2f",id(pzmonthbill).state);'
+
+#Page on nextion tft touch screen
+# 1. page - HomeScreen
+  - platform: nextion
+    page_id: 0
+    component_id: 2
+    id: page1
+    on_press:
+      then:
+        - component.update: nextiondisplay
+
+# 2. page - Lockscreen
+  - platform: nextion
+    page_id: 1
+    component_id: 2
+    id: page2
+    on_press:
+      then:
+        - component.update: nextiondisplay
+        
+  # 3. page - Powermon
+  - platform: nextion
+    page_id: 2
+    component_id: 2
+    id: page3
+    on_press:
+      then:
+        - component.update: nextiondisplay
