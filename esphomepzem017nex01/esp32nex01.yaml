@@ -57,8 +57,8 @@ captive_portal:
 #Serial port setting
 uart:
   - id: uart_2
-    rx_pin: GPIO26
-    tx_pin: GPIO27
+    rx_pin: GPIO16
+    tx_pin: GPIO17
     baud_rate: 9600    
 
 #Display setting
