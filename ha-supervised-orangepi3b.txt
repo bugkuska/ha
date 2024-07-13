@@ -21,7 +21,7 @@ putty download ได้จาก https://the.earth.li/~sgtatham/putty/latest/w6
 3.Upgrade ระบบ
 #apt upgrade 
 4.ติดตั้ง software ที่จำเป็น 
-#apt install apparmor apparmor-utils\
+#apt install apparmor apparmor-utils \
 cifs-utils curl dbus jq \
 libglib2.0-bin lsb-release \
 network-manager nfs-common \
