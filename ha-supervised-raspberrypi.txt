@@ -9,7 +9,7 @@ $sudo apt install net-tools
 3.Upgrade ระบบ
 $sudo apt upgrade 
 4.ติดตั้ง software ที่จำเป็น 
-$sudo apt install apparmor \
+$sudo apt install apparmor apparmor-utils \
 cifs-utils curl dbus jq \
 libglib2.0-bin lsb-release \
 network-manager nfs-common \
