@@ -9,8 +9,7 @@ Download และติดตั้ง SD-Card Formatter จาก https://www.
 3. Download และติดตั้ง Balena Etcher จาก https://etcher.balena.io/ 
 
 หลังจากเตรียม SD-Card เสร็จ ถอด SD-Card ต่อเข้าบอร์ด Orange Pi3
-ต่อสายแลน ต่อไฟเลี้ยง และใช้โปรแกรม IP Scan เพื่อตรวจหาหมายเลข IP Address สำหรับนำมาใช้่ในการ Remote เข้าเครื่องผ่าน putty 
-putty download ได้จาก https://the.earth.li/~sgtatham/putty/latest/w64/putty.exe
+ต่อสายแลน ต่อไฟเลี้ยง 
 
 หลังจาก Remote ได้ให้ทำดังต่อไปนี้
 
@@ -28,6 +27,15 @@ network-manager nfs-common \
 systemd-journal-remote \
 systemd-resolved udisks2 wget -y
 
+#echo "extraargs=apparmor=1 security=apparmor systemd.unified_cgroup_hierarchy=false systemd.legacy_systemd_cgroup_controller=false" >> /boot/armbianEnv.txt
+#update-initramfs -u
+#reboot
+
+Check if that worked:
+
+#systemctl status apparmor.service
+#aa-status
+
 5.Download และติดตั้ง Docker  
 #mkdir ha
 #cd ha
@@ -37,18 +45,23 @@ systemd-resolved udisks2 wget -y
 6. Download และติดตั้ง OS Agent  
 #wget https://github.com/home-assistant/os-agent/releases/download/1.6.0/os-agent_1.6.0_linux_aarch64.deb
 #dpkg -i os-agent_1.6.0_linux_aarch64.deb
+**Orange Pi (Armbian)
+#wget https://github.com/home-assistant/os-agent/releases/download/1.6.0/os-agent_1.6.0_linux_armv7.deb
+#dpkg -i os-agent_1.6.0_linux_armv7.deb
 
 7.Download และติดตั้ง homeassistant-supervised
-#wget wget https://github.com/home-assistant/supervised-installer/releases/download/1.5.0/homeassistant-supervised.deb
-ติดตั้ง homeassistant-supervised
+#wget https://github.com/home-assistant/supervised-installer/releases/download/1.5.0/homeassistant-supervised.deb
 #dpkg -i homeassistant-supervised.deb
 
+**กรณีที่เราติดตั้งบนกล่อง Android TV หรือ ติดตั้งบนบอร์ด Orange Pi (ระบบปฏิบัติการเป็น Armbian)
 ถ้ามี Error "[error] Armbian 24.2.1 bookworm is not supported!" 
 ให้แก้ไฟล์
 #nano /etc/os-release
 PRETTY_NAME="Armbian 23.11.0-trunk lunar"
 แก้เป็น
 PRETTY_NAME="Debian GNU/Linux 11 (bullseye)"
+หรือ
+PRETTY_NAME="Debian GNU/Linux 12 (bookworm)"
 บันทึกและออกจาก nano
 
 แล้ว Run คำสั่งติดตั้ง supervised อีกรอบ
@@ -56,7 +69,21 @@ PRETTY_NAME="Debian GNU/Linux 11 (bullseye)"
 
 8. เลือกเมนู qemuarm-64 >> Enter  
 
+**กรณีที่เราติดตั้งบนกล่อง Android TV หรือ ติดตั้งบนบอร์ด Orange Pi (ระบบปฏิบัติการเป็น Armbian)
+เลือกเมนู qemuarm >> Enter (armv7,32bit)  
+
 เสร็จแล้วรอประมาณ 20 นาที
 http://ip-server:8123
+
+9. Post installation fixes
+
+*Settings
+Unhealthy system - Unprivileged
+
+#systemctl enable systemd-resolved.service
+#systemd-resolve --flush-caches
+#/etc/init.d/networking restart
+#reboot
+
 set hostname
 set network > wlan0
