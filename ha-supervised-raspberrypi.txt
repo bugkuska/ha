@@ -54,7 +54,7 @@ set network > wlan0
 แก้ Error :
 Unsupported system - AppArmor issues
 1. เปิดไฟล์ cmdline.txt
-#nano /boot/firmware/cmdline.txt
+#sudo nano /boot/firmware/cmdline.txt
 2. เพิ่มพารามิเตอร์เคอร์เนล:
    เพิ่ม apparmor=1 security=apparmor ในบรรทัดเดียวกับพารามิเตอร์อื่นๆ โดยไม่ต้องแยกบรรทัดใหม่ ตัวอย่าง:
    dwc_otg.lpm_enable=0 console=serial0,115200 console=tty1 root=PARTUUID=xxxxxxxx-xx rootfstype=ext4 elevator=deadline fsck.repair=yes rootwait apparmor=1 security=apparmor
@@ -62,17 +62,17 @@ Unsupported system - AppArmor issues
    กด Ctrl+O >> Enter เพื่อบันทึก Ctrl+X >> Enter เพื่อออกจาก nano
 4. รีบูตระบบ:
    ใช้คำสั่งต่อไปนี้เพื่อรีบูตระบบ:
-# reboot
+#sudo reboot
 5. ตรวจสอบสถานะของ AppArmor:
    หลังจากรีบูตระบบแล้ว ตรวจสอบสถานะของ AppArmor:
 ที่หน้า HA > Settings
 หรือ ผ่าน terminal
-#aa-status
+#sudo aa-status
 6. รีสตาร์ท Home Assistant Supervisor:
    รีสตาร์ท Home Assistant Supervisor ด้วยคำสั่ง:
-#systemctl restart hassio-supervisor
+#sudo systemctl restart hassio-supervisor
 7. ตรวจสอบสถานะของ Home Assistant Supervisor:
    ตรวจสอบสถานะของ Home Assistant Supervisor ด้วยคำสั่ง:
-#ha supervisor info
+#sudo ha supervisor info
 
 
