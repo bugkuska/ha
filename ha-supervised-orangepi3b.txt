@@ -2,7 +2,8 @@ Orange PI3 B
 http://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/service-and-support/Orange-Pi-3B.html
 
 1. Download armbian จาก 
-https://github.com/armbian/community/releases/download/24.8.0-trunk.369/Armbian_community_24.8.0-trunk.369_Orangepi3b_bookworm_vendor_6.1.43_minimal.img.xz
+https://github.com/armbian/community/releases/download/24.8.0-trunk.369/Armbian_community_24.8.0-trunk.369_Orangepi3b_bookworm_edge_6.9.9_minimal.img.xz
+
 **Server and IOT releases with Armbian Linux v6.1
 
 2. หลังจาก Download เสร็จให้เตรียม SD-Card 
