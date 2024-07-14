@@ -1,0 +1,62 @@
+Orange Pi 3B (Debian)
+
+Download และติดตั้ง Debian
+
+หลังจาก Remote ได้ให้ทำดังต่อไปนี้
+
+1.Update ระบบ 
+$sudo apt update
+2. ติดตั้ง software เพิ่มเติม 
+$sudo apt install net-tools  
+3.Upgrade ระบบ
+$sudo apt upgrade 
+4.ติดตั้ง software ที่จำเป็น 
+$sudo apt install apparmor apparmor-utils \
+cifs-utils curl dbus jq \
+libglib2.0-bin lsb-release \
+network-manager nfs-common \
+systemd-journal-remote \
+systemd-resolved udisks2 wget -y
+
+#echo "extraargs=apparmor=1 security=apparmor systemd.unified_cgroup_hierarchy=false systemd.legacy_systemd_cgroup_controller=false" >> /boot/orangepiEnv.txt
+#update-initramfs -u
+#reboot
+
+Check if that worked:
+
+#systemctl status apparmor.service
+#aa-status
+
+5.Download และติดตั้ง Docker  
+#mkdir ha
+#cd ha
+#curl -fsSL https://get.docker.com -o get-docker.sh
+#sh get-docker.sh 
+
+6. Download และติดตั้ง OS Agent  
+#wget https://github.com/home-assistant/os-agent/releases/download/1.6.0/os-agent_1.6.0_linux_aarch64.deb
+#dpkg -i os-agent_1.6.0_linux_aarch64.deb
+
+7.Download และติดตั้ง homeassistant-supervised
+wget https://github.com/home-assistant/supervised-installer/releases/download/1.7.0/homeassistant-supervised.deb
+#dpkg -i homeassistant-supervised.deb
+
+8. เลือกเมนู 
+เลือกเมนู qemuarm-64  >> Enter 
+
+[info] Install supervisor startup scripts
+[info] Install AppArmor scripts
+[info] Start Home Assistant Supervised
+[info] Installing the 'ha' cli
+[info] Switching to cgroup v1
+[info] Within a few minutes you will be able to reach Home Assistant at:
+[info] http://homeassistant.local:8123 or using the IP address of your
+[info] machine: http://192.168.137.246:8123
+[warn] A reboot is required to apply changes to grub.
+
+เสร็จแล้วรอประมาณ 20 นาที
+http://ip-server:8123
+set hostname
+set network > wlan0
+และ reboot 1 รอบ
+
