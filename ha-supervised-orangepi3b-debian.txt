@@ -1,7 +1,8 @@
 Orange Pi 3B (Debian)
 
 Download และติดตั้ง Debian
-
+https://drive.google.com/drive/folders/1-mcXPDx1QpE9ZI8oTivmJ1Nd5HfU5nFv?usp=sharing
+(bookwarm-server)
 หลังจาก Remote ได้ให้ทำดังต่อไปนี้
 
 1.Update ระบบ 
