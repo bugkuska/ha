@@ -61,3 +61,4 @@ set hostname
 set network > wlan0
 และ reboot 1 รอบ
 
+#nand-sata-install และทำตามขั้นตอนที่ปรากฏ
