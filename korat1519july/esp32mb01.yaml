@@ -1,1 +1,255 @@
-comming soon
+esphome:
+  name: esp32pzem01
+  friendly_name: esp32pzem01
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+substitutions:
+  esp_name: pzem016modbus
+  # Higher value gives lower watt readout
+  current_res: "0.00520"
+  # Lower value gives lower voltage readout
+  voltage_div: "750"
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "0WRAcOayxB/GY5G+k6tce37hs9vgYq55ykSiCDpho1M="
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  power_save_mode: none
+  
+  manual_ip:
+    # Set this to the IP of the ESP
+    static_ip: 192.168.1.50
+    # Set this to the IP address of the router. Often ends with .1
+    gateway: 192.168.1.1
+    # The subnet of the network. 255.255.255.0 works for most home networks.
+    subnet: 255.255.255.0
+    dns1: 192.168.1.1
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Esp32Pzem01 Fallback Hotspot"
+    password: "0814111142"
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+captive_portal:
+
+uart:
+  id: mod_bus
+  tx_pin: 17
+  rx_pin: 16
+  baud_rate: 9600
+  stop_bits: 1
+  parity: none
+  data_bits: 8
+
+#Modbus Sensor & Modbus Relay
+modbus:
+  flow_control_pin: 5
+  id: modbus_sensor
+
+modbus_controller:
+# Modbus device addr slave id1 - PZEM016 AC Single-phase Power Meter
+# Modbus device addr slave id2 - 4CH Modbus RTU Relay
+  - id: mbrelay4ch
+    address: 0x2
+    modbus_id: modbus_sensor
+    setup_priority: -10
+# Modbus device addr slave id3 - Modbus XY-MD02 Temp & Humi
+  - id: xymd02_01
+    address: 0x3
+    modbus_id: modbus_sensor
+    command_throttle: 200ms
+    setup_priority: -10
+    update_interval: 60s
+
+# Modbus device addr slave id4 - Dissolve Oxygen (DO&Temperature)
+  - id: do01
+    address: 0x4
+    modbus_id: modbus_sensor
+    command_throttle: 200ms
+    setup_priority: -10
+    update_interval: 30s
+
+# Onboard 4CH Digital Relay
+switch:
+  - platform: gpio
+    name: "Switch 1"
+    pin: 26
+
+  - platform: gpio
+    name: "Switch 2"
+    pin: 25
+    
+  - platform: gpio
+    name: "Switch 3"
+    pin: 33
+    
+  - platform: gpio
+    name: "Switch 4"
+    pin: 32
+
+# Modbus device addr slave id2 - 4CH Modbus RTU Relay
+  - platform: modbus_controller
+    modbus_controller_id: mbrelay4ch
+    id: MBRelay1
+    name: "Modbus Relay1"
+    address: 0x00
+    register_type: coil
+    bitmask: 0xFF
+
+  - platform: modbus_controller
+    modbus_controller_id: mbrelay4ch
+    id: MBRelay2
+    name: "Modbus Relay2"
+    address: 0x01
+    register_type: coil
+    bitmask: 0xFF
+
+  - platform: modbus_controller
+    modbus_controller_id: mbrelay4ch
+    id: MBRelay3
+    name: "Modbus Relay3"
+    address: 0x02
+    register_type: coil
+    bitmask: 0xFF
+
+  - platform: modbus_controller
+    modbus_controller_id: mbrelay4ch
+    id: MBRelay4
+    name: "Modbus Relay4"
+    address: 0x03
+    register_type: coil
+    bitmask: 0xFF
+
+
+sensor:
+# Modbus device addr slave id1 - PZEM016 AC Single-phase Power Meter
+  - platform: pzemac
+    id: pzemac_1
+    address: 0x1
+    modbus_id: modbus_sensor
+
+    current:
+      name: "Current"
+      id: cur
+    voltage:
+      name: "Voltage"
+      id: vol
+    power:
+      name: "Power"
+      id: power
+      state_class: measurement
+
+    frequency:
+      name: "Frequency"
+      id: freq
+    power_factor:
+      name: "Power Factor"
+      id: pow_factor
+    update_interval: 5s
+
+  - platform: total_daily_energy
+    name: "Total Daily Energy"
+    unit_of_measurement: kWh
+    filters:
+      - multiply: 0.001
+    power_id: power
+  
+  - platform: uptime
+    name: "${esp_name} - Uptime"
+    icon: mdi:clock-outline
+    update_interval: 60s
+  
+  - platform: wifi_signal # Reports the WiFi signal strength/RSSI in dB
+    name: "${esp_name} - WiFi Signal dB"
+    id: wifi_signal_db
+    update_interval: 60s
+    entity_category: "diagnostic"
+
+  - platform: copy # Reports the WiFi signal strength in %
+    source_id: wifi_signal_db
+    name: "${esp_name} - WiFi Signal Percent"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "Signal %"
+    entity_category: "diagnostic"
+    device_class: ""
+
+# Modbus device addr slave id3 - Modbus XY-MD02 Temp & Humi
+    #XY-MD02 Temperature
+  - platform: modbus_controller
+    modbus_controller_id: xymd02_01
+    id: xymd02_temp
+    name: "XY-MD02 Temperature"
+    device_class: TEMPERATURE
+    address: 0x001
+    unit_of_measurement: "°C"
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.1
+  #XY-MD02 Humidity
+  - platform: modbus_controller
+    modbus_controller_id: xymd02_01
+    id: xymd02_humi
+    name: "XY-MD02 Humidity"
+    device_class: HUMIDITY
+    address: 0x002
+    unit_of_measurement: "%"
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.1  
+
+# Modbus device addr slave id4 - Dissolve Oxygen (DO&Temperature)
+  #Dissolve Oxygen
+  - platform: modbus_controller
+    modbus_controller_id: do01
+    id: dissolve_oxygen
+    name: "Dissolve Oxygen"
+    address: 0x000
+    unit_of_measurement: "mg/L"
+    register_type: holding
+    value_type: U_WORD
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01  
+  #Water Temperature
+  - platform: modbus_controller
+    modbus_controller_id: do01
+    id: do_water_temp
+    name: "Water Temperature"
+    device_class: TEMPERATURE
+    address: 0x001
+    unit_of_measurement: "°C"
+    register_type: holding
+    value_type: U_WORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+
+button:
+  - platform: template
+    name: Reset Energy ID1
+    on_press:
+      - pzemac.reset_energy: pzemac_1      
