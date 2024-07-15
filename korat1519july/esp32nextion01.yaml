@@ -1,1 +1,339 @@
+esphome:
+  name: esp32nex01
+  friendly_name: esp32nex01
 
+  on_boot:
+    priority: -180
+    then:
+      - lambda: |-
+          id(page1).publish_state(true);
+          id(page2).publish_state(true);
+          id(page3).publish_state(false);
+          id(page4).publish_state(false);
+          id(page5).publish_state(false);
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "iSGZOT2/z3Z2PgyOxyf8SAyiGWk+m/pGbutm9dGbPUo="
+
+ota:
+  - platform: esphome
+    password: "e71baa5a83b9854d0ce329ff03373ae6"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Esp32Nex01 Fallback Hotspot"
+    password: "0814111142"
+
+#Time services
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: Asia/Bangkok
+
+captive_portal:
+
+#Serial port setting
+uart:
+  - id: uart_2
+    rx_pin: GPIO16
+    tx_pin: GPIO17
+    baud_rate: 9600    
+
+#Display setting
+display:
+  - platform: nextion
+    id: nextiondisplay
+    uart_id: uart_2
+    update_interval: 60s
+    lambda: |-
+            it.set_wait_for_ack(false);
+            auto date = id(sntp_time).now().strftime("%b. %d");
+            auto time = id(sntp_time).now();
+            if (id(page1).state) {
+ 
+            }
+
+            if (id(page2).state) {
+              it.set_component_text_printf("Lockscreen.time","%02d:%02d",time.hour,time.minute);
+              it.set_component_text("Lockscreen.date", date.c_str()); 
+              it.set_component_text_printf("Lockscreen.txttemp","%2f",id(xymd02temp).state);
+              it.set_component_text_printf("Lockscreen.txthumi","%3f",id(xymd02humi).state);
+            }
+
+            if (id(page3).state) {
+              it.set_component_text_printf("Powermon.txtvolt","%2f",id(pzvoltage).state);
+              it.set_component_text_printf("Powermon.txtam","%2f",id(pzcurrent).state);
+              it.set_component_text_printf("Powermon.txthz","%2f",id(pzhz).state);
+              it.set_component_text_printf("Powermon.txtenergy","%2f",id(pzenergy).state);
+              it.set_component_text_printf("Powermon.txtpower","%2f",id(pzpower).state);
+              it.set_component_text_printf("Powermon.txtpf","%2f",id(pzpf).state);
+              it.set_component_text_printf("Powermon.txtentotal","%2f",id(pzentotal).state);
+              it.set_component_text_printf("Powermon.txtmonthbill","%2f",id(pzmonthbill).state);
+            }
+
+            if (id(page4).state) {
+              it.send_command_printf("Swcontrol.bt0.val=%d",id(mbrelaysw1).state);
+              it.send_command_printf("Swcontrol.bt1.val=%d",id(mbrelaysw2).state);
+              it.send_command_printf("Swcontrol.bt2.val=%d",id(mbrelaysw3).state);
+              it.send_command_printf("Swcontrol.bt3.val=%d",id(mbrelaysw4).state);              
+            }
+
+            if (id(page5).state) {
+              it.set_component_text_printf("Sensorxymd.txttemp1","%2f",id(xymd02temp).state);
+              it.set_component_text_printf("Sensorxymd.txthumi1","%3f",id(xymd02humi).state);
+            }
+
+sensor:
+#HA-Nextion sensor data display
+# Pzem016 
+  - platform: homeassistant   # Voltage
+    id: pzvoltage
+    entity_id: sensor.esp32pzem01_voltage
+    accuracy_decimals: 1
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("Powermon.txtvolt","%2f",id(pzvoltage).state);'
+
+  - platform: homeassistant   # Current
+    id: pzcurrent
+    entity_id: sensor.esp32pzem01_current
+    accuracy_decimals: 1
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("Powermon.txtam","%2f",id(pzcurrent).state);'
+
+  - platform: homeassistant   # Hz
+    id: pzhz
+    entity_id: sensor.esp32pzem01_frequency
+    accuracy_decimals: 1
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("Powermon.txthz","%2f",id(pzhz).state);'
+
+  - platform: homeassistant   # Daily Energy
+    id: pzenergy
+    entity_id: sensor.esp32pzem01_total_daily_energy
+    accuracy_decimals: 1
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("Powermon.txtenergy","%2f",id(pzenergy).state);'
+
+  - platform: homeassistant   # Power
+    id: pzpower
+    entity_id: sensor.esp32pzem01_power
+    accuracy_decimals: 1
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("Powermon.txtpower","%2f",id(pzpower).state);'
+
+  - platform: homeassistant   # Power Factor
+    id: pzpf
+    entity_id: sensor.esp32pzem01_power_factor
+    accuracy_decimals: 1
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("Powermon.txtpf","%2f",id(pzpf).state);'
+
+  - platform: homeassistant   # Monthly Energy
+    id: pzentotal
+    entity_id: sensor.monthly_energy
+    accuracy_decimals: 1
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("Powermon.txtentotal","%2f",id(pzentotal).state);'
+
+  - platform: homeassistant   # Monthly Bill
+    id: pzmonthbill
+    entity_id: sensor.total_cost
+    accuracy_decimals: 1
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("Powermon.txtmonthbill","%2f",id(pzmonthbill).state);'
+
+#ESPHome-esp32pzem01-xymd02-temperature
+  - platform: homeassistant  
+    id: xymd02temp
+    entity_id: sensor.esp32pzem01_xy_md02_temperature
+    accuracy_decimals: 0
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("Lockscreen.txttemp","%2f",id(xymd02temp).state);'
+          - lambda: 'id(nextiondisplay).set_component_text_printf("Sensorxymd.txttemp1","%2f",id(xymd02temp).state);'
+#ESPHome-esp32pzem01-xymd02-humidity
+  - platform: homeassistant  
+    id: xymd02humi
+    entity_id: sensor.esp32pzem01_xy_md02_humidity
+    accuracy_decimals: 0
+    on_value:
+       then:
+          - lambda: 'id(nextiondisplay).set_component_text_printf("Lockscreen.txthumi","%2f",id(xymd02humi).state);'
+          - lambda: 'id(nextiondisplay).set_component_text_printf("Sensorxymd.txthumi1","%2f",id(xymd02humi).state);'
+
+#Binary sensors here are both from Nextion and HA. ESPHOME currently can read only binary sensors from Nextion
+binary_sensor:  
+#ESPHome-esp32pzem01-MBRelay4CH         
+#swcontrol1 SW1
+  - platform: homeassistant   
+    id: mbrelaysw1
+    entity_id: switch.esp32pzem01_modbus_relay1
+
+    on_state:
+       then:
+         - lambda: 'id(nextiondisplay).send_command_printf("Swcontrol.bt0.val=%d",id(mbrelaysw1).state);'   
+#swcontrol1 SW2
+  - platform: homeassistant   
+    id: mbrelaysw2
+    entity_id: switch.esp32pzem01_modbus_relay2
+    on_state:
+       then:
+         - lambda: 'id(nextiondisplay).send_command_printf("Swcontrol.bt1.val=%d",id(mbrelaysw2).state);'
+#swcontrol1 SW3
+  - platform: homeassistant   
+    id: mbrelaysw3
+    entity_id: switch.esp32pzem01_modbus_relay3
+    on_state:
+       then:
+         - lambda: 'id(nextiondisplay).send_command_printf("Swcontrol.bt2.val=%d",id(mbrelaysw3).state);'
+#swcontrol1 SW4
+  - platform: homeassistant   
+    id: mbrelaysw4
+    entity_id: switch.esp32pzem01_modbus_relay4
+    on_state:
+       then:
+         - lambda: 'id(nextiondisplay).send_command_printf("Swcontrol.bt3.val=%d",id(mbrelaysw4).state);'
+
+
+#Page on nextion tft touch screen
+# 1. page - HomeScreen
+  - platform: nextion
+    page_id: 0
+    component_id: 2
+    id: page1
+    on_press:
+      then:
+        - component.update: nextiondisplay
+
+# 2. page - Lockscreen
+  - platform: nextion
+    page_id: 1
+    component_id: 2
+    id: page2
+    on_press:
+      then:
+        - component.update: nextiondisplay
+        
+  # 3. page - Powermon
+  - platform: nextion
+    page_id: 2
+    component_id: 2
+    id: page3
+    on_press:
+      then:
+        - component.update: nextiondisplay
+  
+  # 4. page - 4CH Modbus Relay
+  - platform: nextion
+    page_id: 3
+    component_id: 2
+    id: page4
+    on_press:
+      then:
+        - component.update: nextiondisplay
+
+  # 5. page - XY-MD02
+  - platform: nextion
+    page_id: 4
+    component_id: 2
+    id: page5
+    on_press:
+      then:
+        - component.update: nextiondisplay
+  
+
+##Start definition of each binary sensor from Nextion, that esphome reacts with  ------------
+# 1. page - Homescreen
+# 2. page - Lockscreen
+# 3. page - Powermon
+# 4. page - 4CH MBRelay            
+#Swcontrol MB-SW1
+  - platform: nextion
+    page_id: 3
+    component_id: 2
+    id: modbusrelay1
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esp32pzem01_modbus_relay1      
+    on_release:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esp32pzem01_modbus_relay1
+#Swcontrol MB-SW2
+  - platform: nextion
+    page_id: 3
+    component_id: 3
+    id: modbusrelay2
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esp32pzem01_modbus_relay2    
+    on_release:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esp32pzem01_modbus_relay2
+#Swcontrol MB-SW3
+  - platform: nextion
+    page_id: 3
+    component_id: 4
+    id: modbusrelay3
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esp32pzem01_modbus_relay3
+    on_release:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esp32pzem01_modbus_relay3
+#Swcontrol MB-SW4
+  - platform: nextion
+    page_id: 3
+    component_id: 5
+    id: modbusrelay4
+    on_press:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esp32pzem01_modbus_relay4
+    on_release:
+      then:
+        - homeassistant.service:
+            service: switch.toggle
+            data:
+              entity_id: switch.esp32pzem01_modbus_relay4   
