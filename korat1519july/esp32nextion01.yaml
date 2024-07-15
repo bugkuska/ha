@@ -183,6 +183,17 @@ sensor:
           - lambda: 'id(nextiondisplay).set_component_text_printf("Lockscreen.txthumi","%2f",id(xymd02humi).state);'
           - lambda: 'id(nextiondisplay).set_component_text_printf("Sensorxymd.txthumi1","%2f",id(xymd02humi).state);'
 
+#TEXT SENSORS from HA 
+#some sensor data is formatted as text/string, so they cannot be regular imported as regular sensors
+text_sensor:
+#Settings display wi-fi status
+  - platform: template
+    id: esp_ip
+    lambda: 'return {WiFi.localIP().toString().c_str()};'
+    on_value:
+      then:
+        - lambda: 'id(nextiondisplay).set_component_text_printf("Settings.wifistat","%s",id(esp_ip).state.c_str());'
+
 #Binary sensors here are both from Nextion and HA. ESPHOME currently can read only binary sensors from Nextion
 binary_sensor:  
 #ESPHome-esp32pzem01-MBRelay4CH         
@@ -216,6 +227,16 @@ binary_sensor:
        then:
          - lambda: 'id(nextiondisplay).send_command_printf("Swcontrol.bt3.val=%d",id(mbrelaysw4).state);'
 
+  - platform: status
+    id: displaystatus
+    on_state:       # based on wifi connection, we set the global variable here. This way it will be stored and valid upon refresh
+      - if:
+          condition:
+            api.connected:
+          then:
+            - lambda: 'id(nextiondisplay).set_component_text_printf("Settings.wifistat","%s",id(esp_ip).state.c_str());'
+          else:
+            - lambda: 'id(nextiondisplay).set_component_text("Settings.wifistat","Wifi not Connected");'
 
 #Page on nextion tft touch screen
 # 1. page - HomeScreen
