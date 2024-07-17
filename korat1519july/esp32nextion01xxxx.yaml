@@ -38,7 +38,11 @@ wifi:
     ssid: "Esp32Nex01 Fallback Hotspot"
     password: "0814111142"
 
-
+#Time services
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: Asia/Bangkok
 
 captive_portal:
 
