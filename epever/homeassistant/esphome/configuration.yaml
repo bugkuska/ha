@@ -1,0 +1,40 @@
+เพิ่มในไฟล์ configuration.yaml
+
+sensor:
+  - platform: template
+    sensors:
+      epever_device_status:
+        friendly_name: "EPEVER Device Status"
+        value_template: >-
+          {% if states('sensor.esp32epevermppt_epever_device_status_raw') | int == 1 %}
+            Normal
+          {% else %}
+            Abnormal
+          {% endif %}
+      
+      battery_status:
+        friendly_name: "Battery Status"
+        value_template: >-
+          {% if states('sensor.esp32epevermppt_battery_status_raw') | int == 0 %}
+            Normal
+          {% else %}
+            Abnormal
+          {% endif %}
+
+      battery_charging_status:
+        friendly_name: "Battery Charging Status"
+        value_template: >-
+          {% if states('sensor.esp32epevermppt_battery_charging_status_raw') | int == 0 %}
+            Normal
+          {% else %}
+            Fault
+          {% endif %}
+          
+      epever_load_status_display:
+        friendly_name: "Epever Load Status"
+        value_template: >-
+          {% if is_state('binary_sensor.epever_load_status', 'on') %}
+            On
+          {% else %}
+            Off
+          {% endif %}
