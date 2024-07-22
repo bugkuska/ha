@@ -1,0 +1,300 @@
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+    
+captive_portal:
+
+#UART Communication Settings
+uart:
+  tx_pin: GPIO17
+  rx_pin: GPIO16
+  baud_rate: 115200
+
+#Modbus Sensor ID Define
+modbus:
+  id: modbus1
+#Modbus Controller ESPHome Platform
+modbus_controller:
+  - id: epevermppt01
+    address: 0x1
+    modbus_id: modbus1
+    command_throttle: 200ms
+    #setup_priority: -10
+
+#Sensor Esphome platform
+sensor:
+  # Battery voltage
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "Battery Voltage"
+    id: battery_voltage
+    address: 0x331A
+    register_type: read
+    unit_of_measurement: "V"
+    accuracy_decimals: 1
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+  #Battery MAX Voltage
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "Battery MAX Voltage"
+    id: battery_maxvoltage
+    address: 0x3302
+    register_type: read
+    unit_of_measurement: "V"
+    accuracy_decimals: 1
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+  #Battery MIN Voltage
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "Battery MIN Voltage"
+    id: battery_minvoltage
+    address: 0x3303
+    register_type: read
+    unit_of_measurement: "V"
+    accuracy_decimals: 1
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+  #Battery Current 
+  - platform: template
+    name: "Battery Current"
+    id: battery_current
+    unit_of_measurement: "A"
+    lambda: |-
+      int32_t current_l = id(battery_current_l).state;
+      int32_t current_h = id(battery_current_h).state;
+      return ((current_h << 16) | current_l) * 0.01;
+    update_interval: 5s
+  #Battery Current L
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "Battery Current L"
+    id: battery_current_l
+    unit_of_measurement: "A"
+    address: 0x331B
+    register_type: read
+    value_type: U_WORD
+    filters:
+      - multiply: 1.0
+  #Battery Current H
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "Battery Current H"
+    id: battery_current_h
+    unit_of_measurement: "A"
+    address: 0x331C
+    register_type: read
+    value_type: U_WORD
+    filters:
+      - multiply: 1.0
+  #Battery SOC
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "Battery SOC"
+    id: battery_soc
+    unit_of_measurement: "%"
+    address: 0x311A
+    register_type: read
+    value_type: U_WORD
+  #Battery status   
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    id: battery_status_raw
+    name: "Battery status raw"
+    address: 0x3200
+    register_type: read
+    value_type: U_WORD    
+  #Battery charging status   
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    id: battery_charging_status_raw
+    name: "Battery charging status raw"
+    address: 0x3201
+    register_type: read
+    value_type: U_WORD    
+  #Battery Temperature
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    id: bat_temp
+    name: "Battery Temperature"
+    device_class: "temperature"
+    address: 0x3110
+    unit_of_measurement: "°C"
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.01
+  #EPEVER Device Temperature
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    id: device_temp
+    name: "EPEVER Device Temperature"
+    device_class: "temperature"
+    address: 0x3111
+    unit_of_measurement: "°C"
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.01
+  #EPEVER Device Status Raw
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    id: epever_device_status_raw
+    name: "EPEVER Device Status Raw"
+    address: 0x3201
+    register_type: read
+    value_type: U_WORD
+
+# Load Current
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "Load Current"
+    id: load_current
+    address: 0x310D
+    register_type: read
+    unit_of_measurement: "A"
+    accuracy_decimals: 2
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+
+  # Load Voltage
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "Load Voltage"
+    id: load_voltage
+    address: 0x310C
+    register_type: read
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+
+  # Load Power
+  - platform: template
+    name: "Load Power"
+    id: load_power
+    unit_of_measurement: "W"
+    lambda: |-
+      int32_t power_l = id(load_power_l).state;
+      int32_t power_h = id(load_power_h).state;
+      return ((power_h << 16) | power_l) * 0.01;
+    update_interval: 5s
+
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "Load Power L"
+    id: load_power_l
+    unit_of_measurement: "W"
+    address: 0x310E
+    register_type: read
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "Load Power H"
+    id: load_power_h
+    unit_of_measurement: "W"
+    address: 0x310F
+    register_type: read
+    value_type: U_WORD
+
+  # Load Status
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "EPEVER Load Status Raw"
+    id: epever_load_status_raw
+    address: 0x3202
+    register_type: read
+    value_type: U_WORD
+
+  
+  
+  # PV
+  #Solar Panel Voltage
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "Solar Panel Voltage"
+    id: pv_voltage
+    address: 0x3100
+    register_type: read
+    unit_of_measurement: "V"
+    accuracy_decimals: 1
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+ #Solar Panel Current
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "Solar Panel Current"
+    id: pv_current
+    address: 0x3101
+    register_type: read
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+  #PV Array Input Powe
+  - platform: template
+    name: "PV Array Input Power"
+    id: pv_power
+    unit_of_measurement: "W"
+    lambda: |-
+      int32_t power_l = id(pv_power_l).state;
+      int32_t power_h = id(pv_power_h).state;
+      return ((power_h << 16) | power_l) * 0.01;
+    update_interval: 5s
+  #PV Array Input Power L
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "PV Array Input Power L"
+    id: pv_power_l
+    unit_of_measurement: "W"
+    address: 0x3102
+    register_type: read
+    value_type: U_WORD
+  #PV Array Input Power H
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "PV Array Input Power H"
+    id: pv_power_h
+    unit_of_measurement: "W"
+    address: 0x3103
+    register_type: read
+    value_type: U_WORD
+  # Total Daily Energy sensor
+  - platform: total_daily_energy
+    name: "Total Daily Energy"
+    power_id: pv_power
+    unit_of_measurement: "kWh"
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.001  # Convert Wh to kWh
+  # Integration sensor to calculate total energy from power
+  - platform: integration
+    name: "Total Energy"
+    sensor: pv_power
+    unit_of_measurement: "kWh"
+    accuracy_decimals: 2
+    time_unit: h
+    filters:
+      - multiply: 0.001  # Convert Wh to kWh
+
+binary_sensor:
+  - platform: template
+    name: "EPEVER Load Status"
+    id: epever_load_status
+    lambda: |-
+      if (id(epever_load_status_raw).state == 1) {
+        return true;
+      } else {
+        return false;
+      }
