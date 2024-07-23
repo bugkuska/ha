@@ -1,0 +1,146 @@
+ติดตั้ง Ubuntu เสร็จและ Remote ได้แล้ว
+
+
+1.Update ระบบ 
+$sudo apt update
+2. ติดตั้ง software เพิ่มเติม 
+$sudo apt install net-tools  
+3.Upgrade ระบบ
+$sudo apt upgrade 
+4.ติดตั้ง software ที่จำเป็น 
+$sudo apt install apparmor apparmor-utils \
+cifs-utils curl dbus jq \
+libglib2.0-bin lsb-release \
+network-manager nfs-common \
+systemd-journal-remote \
+systemd-resolved udisks2 wget -y
+
+5.Download และติดตั้ง Docker  
+#mkdir ha
+#cd ha
+#curl -fsSL https://get.docker.com -o get-docker.sh
+#sh get-docker.sh 
+
+6. Download และติดตั้ง OS Agent  
+#wget https://github.com/home-assistant/os-agent/releases/download/1.6.0/os-agent_1.6.0_linux_x86_64.deb
+#dpkg -i os-agent_1.6.0_linux_x86_64.deb
+
+7.Download และติดตั้ง homeassistant-supervised
+#wget https://github.com/home-assistant/supervised-installer/releases/download/1.8.0/homeassistant-supervised.deb
+#dpkg -i homeassistant-supervised.deb
+Selecting previously unselected package homeassistant-supervised.
+(Reading database ... 85083 files and directories currently installed.)
+Preparing to unpack homeassistant-supervised.deb ...
+[warn]
+[warn] If you want more control over your own system, run
+[warn] Home Assistant as a VM or run Home Assistant Core
+[warn] via a Docker container.
+[warn]
+[error] Ubuntu 24.04 LTS is not supported!
+dpkg: error processing archive homeassistant-supervised.deb (--install):
+ new homeassistant-supervised package pre-installation script subprocess returned error exit status 1
+
+# nano /etc/os-release
+  GNU nano 7.2                           /etc/os-release
+PRETTY_NAME="Debian GNU/Linux 12 (bookworm)"
+#PRETTY_NAME="Ubuntu 24.04 LTS"
+NAME="Ubuntu"
+VERSION_ID="24.04"
+VERSION="24.04 LTS (Noble Numbat)"
+VERSION_CODENAME=noble
+ID=ubuntu
+ID_LIKE=debian
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+UBUNTU_CODENAME=noble
+LOGO=ubuntu-logo
+
+ctrl + o >> enter, ctrl+x >> enter
+
+#apt --fix-broken install
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+Correcting dependencies... Done
+The following additional packages will be installed:
+  alsa-topology-conf alsa-ucm-conf bluez libasound2-data libasound2t64
+Suggested packages:
+  pulseaudio-module-bluetooth alsa-utils libasound2-plugins
+The following NEW packages will be installed:
+  alsa-topology-conf alsa-ucm-conf bluez libasound2-data libasound2t64
+0 upgraded, 5 newly installed, 0 to remove and 0 not upgraded.
+1 not fully installed or removed.
+Need to get 1,858 kB of archives.
+After this operation, 7,271 kB of additional disk space will be used.
+Do you want to continue? [Y/n] y
+Get:1 http://th.archive.ubuntu.com/ubuntu noble/main amd64 libasound2-data all 1.2.11-1build2 [21.0 kB]
+Get:2 http://th.archive.ubuntu.com/ubuntu noble/main amd64 libasound2t64 amd64 1.2.11-1build2 [399 kB]
+Get:3 http://th.archive.ubuntu.com/ubuntu noble/main amd64 bluez amd64 5.72-0ubuntu5 [1,359 kB]
+Get:4 http://th.archive.ubuntu.com/ubuntu noble/main amd64 alsa-topology-conf all 1.2.5.1-2 [15.5 kB]
+Get:5 http://th.archive.ubuntu.com/ubuntu noble/main amd64 alsa-ucm-conf all 1.2.10-1ubuntu5 [63.1 kB]
+Fetched 1,858 kB in 1s (1,298 kB/s)
+Selecting previously unselected package libasound2-data.
+(Reading database ... 85101 files and directories currently installed.)
+Preparing to unpack .../libasound2-data_1.2.11-1build2_all.deb ...
+Unpacking libasound2-data (1.2.11-1build2) ...
+Selecting previously unselected package libasound2t64:amd64.
+Preparing to unpack .../libasound2t64_1.2.11-1build2_amd64.deb ...
+Unpacking libasound2t64:amd64 (1.2.11-1build2) ...
+Selecting previously unselected package bluez.
+Preparing to unpack .../bluez_5.72-0ubuntu5_amd64.deb ...
+Unpacking bluez (5.72-0ubuntu5) ...
+Selecting previously unselected package alsa-topology-conf.
+Preparing to unpack .../alsa-topology-conf_1.2.5.1-2_all.deb ...
+Unpacking alsa-topology-conf (1.2.5.1-2) ...
+Selecting previously unselected package alsa-ucm-conf.
+Preparing to unpack .../alsa-ucm-conf_1.2.10-1ubuntu5_all.deb ...
+Unpacking alsa-ucm-conf (1.2.10-1ubuntu5) ...
+Setting up libasound2-data (1.2.11-1build2) ...
+Setting up libasound2t64:amd64 (1.2.11-1build2) ...
+Setting up alsa-topology-conf (1.2.5.1-2) ...
+Setting up alsa-ucm-conf (1.2.10-1ubuntu5) ...
+Setting up bluez (5.72-0ubuntu5) ...
+Created symlink /etc/systemd/system/dbus-org.bluez.service → /usr/lib/systemd/system/bluetooth.service.
+Created symlink /etc/systemd/system/bluetooth.target.wants/bluetooth.service → /usr/lib/systemd/system/bluetooth.service.
+Setting up homeassistant-supervised (1.8.0) ...
+[info] Reload systemd
+[info] Restarting NetworkManager
+[info] Enable systemd-resolved
+[info] Restarting systemd-resolved
+[info] Set up systemd-journal-gatewayd socket file
+[info] Enable systemd-journal-gatewayd
+[info] Start nfs-utils.service
+[info] Restarting docker service
+PING checkonline.home-assistant.io (2606:4700:20::681a:5ee) 56 data bytes
+64 bytes from 2606:4700:20::681a:5ee: icmp_seq=1 ttl=59 time=16.2 ms
+
+--- checkonline.home-assistant.io ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 16.225/16.225/16.225/0.000 ms
+[info] Install supervisor startup scripts
+[info] Install AppArmor scripts
+[info] Start Home Assistant Supervised
+[info] Installing the 'ha' cli
+[info] Switching to cgroup v1
+Sourcing file `/etc/default/grub'
+Systems on them will not be added to the GRUB boot configuration.
+Check GRUB_DISABLE_OS_PROBER documentation entry.
+Adding boot menu entry for UEFI Firmware Settings ...
+done
+[info] Within a few minutes you will be able to reach Home Assistant at:
+[info] http://homeassistant.local:8123 or using the IP address of your
+[info] machine: http://192.168.1.171:8123
+[warn] A reboot is required to apply changes to grub.
+Processing triggers for man-db (2.12.0-4build2) ...
+Processing triggers for dbus (1.14.10-4ubuntu4) ...
+Processing triggers for libc-bin (2.39-0ubuntu8.2) ...
+needrestart is being skipped since dpkg has failed
+root@ubuntuserver24lts:~/ha# 
+
+
+เสร็จแล้วรอประมาณ 20 นาที
+http://ip-server:8123
+
+
