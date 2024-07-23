@@ -143,4 +143,7 @@ root@ubuntuserver24lts:~/ha#
 เสร็จแล้วรอประมาณ 20 นาที
 http://ip-server:8123
 
+Unsupported syste - Network Manager issues
+
+
 
