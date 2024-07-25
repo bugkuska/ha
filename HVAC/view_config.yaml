@@ -1,0 +1,22 @@
+เพิ่มใน view ที่เราสร้างสำหรับแสดงค่า ครับ
+
+
+cards:
+  - type: thermostat
+    entity: climate.ha_sys_cooler
+    name: HA System Cooler
+  - type: entities
+    entities:
+      - entity: input_number.cooling_setpoint
+      - entity: sensor.esp32_hasysmon01_dht11temperature
+        name: อุณหภูมิภายในกล่องควบคุม
+      - entity: switch.esp32_hasysmon01_fan1
+        name: พัดลมระบายความร้อน
+        icon: mdi:fan
+      - entity: sensor.esp32_hasysmon01_dht11humidity
+        name: ความชื้นสัมพัทธ์ภายในกล่องควบคุม
+      - entity: sensor.esp32_hasysmon01_ldr
+        name: ความสว่างในห้องทำงาน
+    title: Temperature Control
+    show_header_toggle: false
+title: HVAC
