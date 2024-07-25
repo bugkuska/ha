@@ -46,6 +46,12 @@ Start systemd services
 Enable systemd-resolve
 #systemctl enable systemd-resolved.service
 
+ลอง ping ไปที่ google อีกครั้ง
+# ping www.google.com
+PING www.google.com(kul09s04-in-x04.1e100.net (2404:6800:4001:802::2004)) 56 data bytes
+64 bytes from kul09s21-in-x04.1e100.net (2404:6800:4001:802::2004): icmp_seq=1 ttl=115 time=42.5 ms
+#
+
 run คำสั่ง doanload docker script อีกครั้ง
 #curl -fsSL https://get.docker.com -o get-docker.sh
 #sh get-docker.sh 
