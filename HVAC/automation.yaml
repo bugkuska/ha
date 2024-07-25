@@ -1,0 +1,14 @@
+เพิ่มในไฟล์ automation.yaml ครับ
+
+#HVAC
+- alias: "Sync Cooler Setpoint with Input Number"
+  trigger:
+    - platform: state
+      entity_id: input_number.cooling_setpoint
+  action:
+    - service: climate.set_temperature
+      target:
+        entity_id: climate.ha_sys_cooler
+      data:
+        temperature: "{{ states('input_number.cooling_setpoint') | float }}"
+        
