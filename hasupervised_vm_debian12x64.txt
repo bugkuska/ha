@@ -41,10 +41,10 @@ nameserver 8.8.4.4
 Ctrl+O >> Enter เพื่อบันทึก ctrl+x เพื่อออกจาก nano
 #
 Start systemd services
-#systemctl stop systemd-resolved.service
+#systemctl start systemd-resolved.service
 
 Enable systemd-resolve
-#systemctl disable systemd-resolved.service
+#systemctl enable systemd-resolved.service
 
 run คำสั่ง doanload docker script อีกครั้ง
 #curl -fsSL https://get.docker.com -o get-docker.sh
