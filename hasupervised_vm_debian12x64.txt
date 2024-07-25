@@ -20,6 +20,34 @@ systemd-resolved udisks2 wget -y
 #mkdir ha
 #cd ha
 #curl -fsSL https://get.docker.com -o get-docker.sh
+**ถ้าขึ้น error don't resolve hostname 
+ลอง ping ไปที่ Google 
+# ping www.google.com
+ping: www.google.com: Temporary failure in name resolution
+#
+Disable systemd-resolve
+#systemctl disable systemd-resolved.service
+Stop systemd services
+#systemctl stop systemd-resolved.service
+ลบไฟล์ resolve.conf เดิม
+#rm /etc/resolv.conf
+สร้างไฟล์ resolve.conf ขึ้นมาใหม่
+# nano /etc/resolv.conf
+เพิ่ม
+
+nameserver 8.8.8.8
+nameserver 8.8.4.4
+
+Ctrl+O >> Enter เพื่อบันทึก ctrl+x เพื่อออกจาก nano
+#
+Start systemd services
+#systemctl stop systemd-resolved.service
+
+Enable systemd-resolve
+#systemctl disable systemd-resolved.service
+
+run คำสั่ง doanload docker script อีกครั้ง
+#curl -fsSL https://get.docker.com -o get-docker.sh
 #sh get-docker.sh 
 
 6. Download และติดตั้ง OS Agent  
