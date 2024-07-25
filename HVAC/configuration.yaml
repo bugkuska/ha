@@ -1,0 +1,31 @@
+เพิ่มในไฟล์ configuration.yaml ครับ
+
+climate:
+  - platform: generic_thermostat
+    name: HA Sys Cooler
+    heater: switch.esp32_hasysmon01_fan1
+    target_sensor: sensor.esp32_hasysmon01_dht11temperature
+    ac_mode: true
+    min_temp: 25
+    max_temp: 80
+    target_temp: 35
+    cold_tolerance: 0.5
+    hot_tolerance: 0.5
+    min_cycle_duration:
+      minutes: 1
+    keep_alive:
+      minutes: 3
+    initial_hvac_mode: "cool"
+    away_temp: 30
+    precision: 0.1
+
+input_number:
+  cooling_setpoint:
+    name: Cooling Setpoint
+    initial: 35
+    min: 25
+    max: 80
+    step: 0.5
+    unit_of_measurement: '°C'
+    mode: slider
+
