@@ -1,0 +1,140 @@
+เพิ่มในไฟล์ configuration.yaml สำหรับคำนวณการใช้งานไฟฟ้า
+
+sensor:
+- platform: template
+  sensors:
+    pzem016_power_meter:
+      friendly_name: "PZEM016 Power Meter"
+      unit_of_measurement: 'W'
+      unique_id: pzem016_power_meter
+      value_template: >
+        {{ state_attr('sensor.แก้เป็นชื่อ entities ของเรา หน่วยเป็น kwh','current_consumption') | float }}
+        
+    cost_150:
+      friendly_name: "Energy Cost 0-150 Unit"
+      unit_of_measurement: 'THB'
+      unique_id: cost_150
+      value_template: >
+        {% set unit = states('sensor.monthly_energy') | float %}
+        {% set price_150 = 3.2484 %}
+        {% set cost = 0 %}
+        {% if unit <= 150 %}
+            {% set cost = unit * price_150 %}
+        {% else %}
+            {%set cost = 150 * price_150 %}
+        {% endif %}
+        {{ cost | round(2) }}
+      icon_template: >
+        mdi:transmission-tower
+        
+    cost_250:
+      friendly_name: "Energy Cost 151-400 Unit"
+      unit_of_measurement: 'THB'
+      unique_id: cost_250
+      value_template: >
+        {% set unit = states('sensor.monthly_energy') | float %}
+        {% set price_250 = 4.2218 %}
+        {% if  unit <= 150 %}
+            {% set cost = 0 %}
+        {% elif unit > 150 and unit <= 400 %}
+            {% set cost = (unit-150) * price_250 %}
+        {% else %}
+            {% set cost = 250 * price_250 %}
+        {% endif %}
+        {{ cost | round(2) }}
+      icon_template: >
+        mdi:transmission-tower
+    
+    cost_400:
+      friendly_name: "Energy Cost 400+ Unit"
+      unit_of_measurement: 'THB'
+      unique_id: cost_400
+      value_template: >
+        {% set unit = states('sensor.monthly_energy') | float %}
+        {% set price_400 = 4.4217 %}
+        {% if  unit < 400 %}
+            {% set cost = 0 %}
+        {% else %}
+            {% set cost = (unit-400) * price_400 %}
+        {% endif %}
+        {{ cost | round(2) }}
+      icon_template: >
+        mdi:transmission-tower  
+        
+    base_cost:
+      friendly_name: "Base Energy Cost"
+      unit_of_measurement: 'THB'
+      unique_id: base_cost
+      value_template: >
+        {% if states('sensor.cost_150') == "unavailable" %}
+            {% set cost_150 = 0 %}
+        {% else %}
+            {% set cost_150 = states('sensor.cost_150') | float %}
+        {% endif %}
+        
+        {% if states('sensor.cost_250') == "unavailable" %}
+            {% set cost_250 = 0 %}
+        {% else %}
+            {% set cost_250 = states('sensor.cost_250') | float %}
+        {% endif %}
+        
+        {% if states('sensor.cost_400') == "unavailable" %}
+            {% set cost_400 = 0 %}
+        {% else %}
+            {% set cost_400 = states('sensor.cost_400') | float %}
+        {% endif %}
+        
+        {{ cost_150 + cost_250 + cost_400  | round(2) }}
+      icon_template: >
+        mdi:cash-100
+        
+    base_cost_services_charge:
+      friendly_name: "Base Energy Cost Service Charge"
+      unit_of_measurement: 'THB'
+      unique_id: base_cost_services_charge
+      value_template: >
+        {{  states('sensor.base_cost') | float + states('input_number.servicecharge') | round(2) }}
+      icon_template: >
+        mdi:transmission-tower
+    
+    ft_cost:
+      friendly_name: "FT Cost"
+      unit_of_measurement: 'THB'
+      unique_id: ft_cost
+      value_template: >
+        {{  states('sensor.monthly_energy') | float * states('input_number.ftcharge') | round(2) }}
+      icon_template: >
+        mdi:transmission-tower    
+     
+    vat_7_percent:
+      friendly_name: "VAT 7%"
+      unit_of_measurement: 'THB'
+      unique_id: vat_7_percent
+      value_template: >
+        {{  (states('sensor.base_cost_services_charge') | float + states('sensor.ft_cost') | float) * 7/100 | round(2) }}
+      icon_template: >
+        mdi:transmission-tower   
+    
+    total_cost:
+      friendly_name: "Total Cost"
+      unit_of_measurement: 'THB'
+      unique_id: total_cost
+      value_template: >
+        {{  states('sensor.base_cost_services_charge') | float + states('sensor.ft_cost') | float + states('sensor.vat_7_percent') | float | round(2) }}
+      icon_template: >
+        mdi:transmission-tower 
+
+  utility_meter:
+  daily_energy:
+    source: sensor.แก้เป็นชื่อ entities ของเรา หน่วยเป็น kwh
+    cycle: daily
+    offset:
+      hours: 0
+      minutes: 0 
+  monthly_energy:
+    source: sensor.แก้เป็นชื่อ entities ของเรา หน่วยเป็น kwh
+    cycle: monthly
+    offset:
+      days: 16
+      hours: 0
+      minutes: 0
