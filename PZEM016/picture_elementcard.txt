@@ -1,0 +1,60 @@
+type: picture-elements
+elements:
+  - type: state-label
+    entity: sensor.total_cost2
+    style:
+      top: 79%
+      left: 65%
+      font-size: 20px
+  - type: image
+    image: /local/picture_element/custom_smartmeter/disc.gif
+    style:
+      top: 44.7%
+      left: 50%
+      width: 43%
+  - type: state-label
+    entity: sensor.esp32powermon01_power
+    style:
+      top: 30%
+      left: 50.5%
+      font-size: 50px
+  - type: state-label
+    entity: sensor.monthly_energy2
+    style:
+      top: 79%
+      left: 33%
+      font-size: 20px
+  - type: state-label
+    entity: sensor.daily_energy2
+    style:
+      top: 58%
+      left: 35%
+      font-size: 20px
+      color: black
+  - type: state-label
+    entity: sensor.esp32powermon01_current
+    style:
+      top: 58%
+      left: 69%
+      font-size: 20px
+      color: black
+  - type: image
+    image: /local/picture_element/custom_smartmeter/fb-icon.png
+    tap_action:
+      action: url
+      url_path: https://www.facebook.com/smfthailand
+    style:
+      top: 91%
+      left: 36%
+      width: 11%
+      border-radius: 100%
+  - type: image
+    image: /local/picture_element/custom_smartmeter/grafana-icon.png
+    tap_action:
+      action: navigate
+      navigation_path: /lovelace/p
+    style:
+      top: 91%
+      left: 62%
+      width: 10%
+image: /local/picture_element/custom_smartmeter/power_meter3.png
