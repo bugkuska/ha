@@ -1,0 +1,31 @@
+type: entities
+entities:
+  - entity: sensor.monthly_energy
+    secondary_info: last-changed
+    name: การใช้ไฟฟ้าเดือนนี้
+  - entity: sensor.cost_150
+    secondary_info: last-updated
+    name: ค่าไฟ 150 หน่วยแรก
+  - entity: sensor.cost_250
+    name: ค่าไฟหน่วยที่ 151-400
+    secondary_info: last-updated
+  - entity: sensor.cost_400
+    name: ค่าไฟหน่วยที่ 400 ขึ้นไป
+    secondary_info: last-updated
+  - entity: sensor.base_cost
+    name: ค่าไฟฐาน (ไม่รวมค่าบริการ)
+  - entity: input_number.servicecharge
+    name: ค่าบริการ
+  - entity: sensor.base_cost_services_charge
+    name: ค่าไฟฐาน (รวมค่าบริการ)
+  - entity: input_number.ftcharge
+    name: อัตราค่า FT
+  - entity: sensor.ft_cost
+    secondary_info: last-updated
+    name: ค่า FT
+  - entity: sensor.vat_7_percent
+    name: VAT 7%
+    secondary_info: last-updated
+  - entity: sensor.total_cost
+    name: รวมค่าไฟเดือนนี้
+title: คำนวณการใช้งานไฟฟ้า
