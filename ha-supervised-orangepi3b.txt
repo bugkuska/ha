@@ -66,7 +66,8 @@ PRETTY_NAME="Debian GNU/Linux 12 (bookworm)"
 
 แล้ว Run คำสั่งติดตั้ง supervised อีกรอบ
 #dpkg -i homeassistant-supervised.deb
-
+ถ้า error 
+#apt --fix-broken install
 8. เลือกเมนู qemuarm-64 >> Enter  
 
 **กรณีที่เราติดตั้งบนกล่อง Android TV หรือ ติดตั้งบนบอร์ด Orange Pi (ระบบปฏิบัติการเป็น Armbian)
