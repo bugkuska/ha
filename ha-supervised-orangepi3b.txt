@@ -51,6 +51,8 @@ Check if that worked:
 
 7.Download และติดตั้ง homeassistant-supervised
 #wget https://github.com/home-assistant/supervised-installer/releases/download/1.5.0/homeassistant-supervised.deb
+หรือ 
+# wget -O homeassistant-supervised.deb https://github.com/home-assistant/supervised-installer/releases/latest/download/homeassistant-supervised.deb
 #dpkg -i homeassistant-supervised.deb
 
 **กรณีที่เราติดตั้งบนกล่อง Android TV หรือ ติดตั้งบนบอร์ด Orange Pi (ระบบปฏิบัติการเป็น Armbian)
