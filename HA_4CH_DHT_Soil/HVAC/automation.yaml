@@ -1,0 +1,127 @@
+#HVAC-Temperature Sensor
+#Sync System Cooler Setpoint with Input Number
+- alias: Sync System Cooler Setpoint with Input Number
+  trigger:
+    - platform: state
+      entity_id: input_number.system_cooling_setpoint
+  condition:
+    - condition: state
+      entity_id: input_boolean.auto_mode_relay_1
+      state: 'on'
+  action:
+    - service: climate.set_temperature
+      target:
+        entity_id: climate.system_fan_cooler
+      data:
+        temperature: "{{ states('input_number.system_cooling_setpoint') | float }}"
+
+#Sync Thermostat with System Cooling Setpoint
+- alias: Sync Thermostat with System Cooling Setpoint
+  trigger:
+    - platform: state
+      entity_id: climate.system_fan_cooler
+      attribute: temperature
+  condition:
+    - condition: state
+      entity_id: input_boolean.auto_mode_relay_1
+      state: 'on'
+  action:
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.system_cooling_setpoint
+      data:
+        value: "{{ state_attr('climate.system_fan_cooler', 'temperature') | float }}"
+
+#Control Relay 1 in Auto Mode
+- alias: Control Relay 1 in Auto Mode
+  trigger:
+    - platform: state
+      entity_id: sensor.esp32modbus01_air_temperature
+  condition:
+    - condition: state
+      entity_id: input_boolean.auto_mode_relay_1
+      state: 'on'
+  action:
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ states('sensor.esp32modbus01_air_temperature') | float > states('input_number.system_cooling_setpoint') | float }}"
+          sequence:
+            - service: switch.turn_on
+              target:
+                entity_id: switch.relay_1
+        - conditions:
+            - condition: template
+              value_template: "{{ states('sensor.esp32modbus01_air_temperature') | float <= states('input_number.system_cooling_setpoint') | float }}"
+          sequence:
+            - service: switch.turn_off
+              target:
+                entity_id: switch.relay_1
+
+#Disable Auto Mode for Manual Control
+- alias: Disable Auto Mode for Manual Control
+  trigger:
+    - platform: state
+      entity_id: input_boolean.auto_mode_relay_1
+      to: 'off'
+  action:
+    - service: automation.turn_off
+      target:
+        entity_id:
+          - automation.sync_system_cooler_setpoint_with_input_number
+          - automation.sync_thermostat_with_system_cooling_setpoint
+          - automation.control_relay_1_in_auto_mode
+    - service: climate.set_hvac_mode
+      target:
+        entity_id: climate.system_fan_cooler
+      data:
+        hvac_mode: 'off'
+    - service: switch.turn_off
+      target:
+        entity_id: switch.relay_1
+
+#Enable Auto Mode Control
+- alias: Enable Auto Mode Control
+  trigger:
+    - platform: state
+      entity_id: input_boolean.auto_mode_relay_1
+      to: 'on'
+  action:
+    - service: automation.turn_on
+      target:
+        entity_id:
+          - automation.sync_system_cooler_setpoint_with_input_number
+          - automation.sync_thermostat_with_system_cooling_setpoint
+          - automation.control_relay_1_in_auto_mode
+    - service: climate.set_hvac_mode
+      target:
+        entity_id: climate.system_fan_cooler
+      data:
+        hvac_mode: 'cool'
+
+#Soil Moisture Sensor
+#Control Relay 2 Based on Soil Moisture
+- alias: Control Relay 2 Based on Soil Moisture
+  trigger:
+    - platform: state
+      entity_id: sensor.esp32modbus01_soil_moisture_level
+  condition:
+    - condition: state
+      entity_id: input_boolean.auto_mode_soil_moisture
+      state: 'on'
+  action:
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ states('sensor.esp32modbus01_soil_moisture_level') | float < states('input_number.soil_moisture_setpoint') | float }}"
+          sequence:
+            - service: switch.turn_on
+              target:
+                entity_id: switch.esp32modbus01_relay_2
+        - conditions:
+            - condition: template
+              value_template: "{{ states('sensor.esp32modbus01_soil_moisture_level') | float >= states('input_number.soil_moisture_setpoint') | float }}"
+          sequence:
+            - service: switch.turn_off
+              target:
+                entity_id: switch.esp32modbus01_relay_2
