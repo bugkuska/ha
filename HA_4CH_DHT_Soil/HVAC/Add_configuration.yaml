@@ -1,0 +1,52 @@
+#HVAC  
+climate:
+#system cooling
+  - platform: generic_thermostat
+    name: System Fan Cooler
+    heater: switch.esp32modbus01_relay_1 #Change Entity
+    target_sensor: sensor.esp32modbus01_air_temperature #Change Entity
+    ac_mode: true
+    min_temp: 0
+    max_temp: 100
+    target_temp: 35
+    cold_tolerance: 0.5
+    hot_tolerance: 0.5
+    min_cycle_duration:
+      minutes: 1
+    keep_alive:
+      minutes: 3
+    initial_hvac_mode: "cool"
+    away_temp: 35
+    precision: 0.1
+
+input_number:
+#System Cooling Setpoint
+  system_cooling_setpoint:
+    name: System Cooling Setpoint
+    initial: 35
+    min: 0
+    max: 100
+    step: 0.5
+    unit_of_measurement: '°C'
+    mode: slider
+  
+  soil_moisture_setpoint:
+    name: Soil Moisture Setpoint
+    initial: 50
+    min: 0
+    max: 100
+    step: 1
+    unit_of_measurement: '%'
+    mode: slider
+
+
+input_boolean:
+  auto_mode_relay_1:
+    name: Auto Mode Relay 1
+    initial: on  # ค่าเริ่มต้นเป็นโหมด Auto
+    icon: mdi:autorenew
+    
+  auto_mode_soil_moisture:
+    name: Auto Mode Soil Moisture
+    initial: on
+    icon: mdi:autorenew
