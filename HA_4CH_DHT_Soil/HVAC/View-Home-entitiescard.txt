@@ -1,0 +1,55 @@
+title: Home
+cards:
+  - type: entities
+    entities:
+      - entity: switch.esp32modbus01_relay_1
+        name: Relay 1
+      - entity: switch.esp32modbus01_relay_2
+        name: Relay 2
+      - entity: switch.esp32modbus01_relay_3
+        name: Relay 3
+      - entity: switch.esp32modbus01_relay_4
+        name: Relay 4
+      - entity: switch.esp32modbus01_wifi_connected_switch
+        name: WiFi Connected Switch
+    title: esp32modbus01
+    show_header_toggle: false
+  - type: entities
+    entities:
+      - entity: sensor.esp32modbus01_air_humidity
+        name: Air Humidity
+      - entity: sensor.esp32modbus01_air_temperature
+        name: Air Temperature
+      - entity: sensor.esp32modbus01_soil_moisture_level
+        name: Soil Moisture 1
+    title: esp32modbus01
+  - type: entities
+    entities:
+      - entity: sensor.esp32modbus01_esp32modbus01_uptime
+        name: Esp32modbus01 - Uptime
+      - entity: sensor.esp32modbus01_esp32modbus01_wifi_signal_db
+        name: Esp32modbus01 - WiFi Signal dB
+      - entity: sensor.esp32modbus01_esp32modbus01_wifi_signal_percent
+        name: Esp32modbus01 - WiFi Signal Percent
+      - entity: binary_sensor.esp32modbus01_wifi_status
+        name: WiFi Status
+    title: esp32modbus01
+  - type: thermostat
+    entity: climate.system_fan_cooler
+    show_current_as_primary: true
+  - type: entities
+    entities:
+      - entity: input_number.system_cooling_setpoint
+      - entity: sensor.esp32modbus01_air_temperature
+      - entity: input_boolean.auto_mode_relay_1
+        name: Auto/Manual Mode
+      - entity: switch.esp32modbus01_relay_1
+        name: Relay 1 Control
+  - type: entities
+    entities:
+      - entity: input_number.soil_moisture_setpoint
+      - entity: sensor.esp32modbus01_soil_moisture_level
+      - entity: input_boolean.auto_mode_soil_moisture
+        name: Auto/Manual Mode
+      - entity: switch.esp32modbus01_relay_2
+        name: Relay 2 Control
