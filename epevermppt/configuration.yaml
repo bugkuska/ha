@@ -1,0 +1,40 @@
+sensor:
+  - platform: template
+    sensors:
+      epever_device_status:
+        friendly_name: "EPEVER Device Status"
+        value_template: >-
+          {% if states('sensor.esp32epevermppt_battery_status_raw') | int == 0 %}
+            Normal
+          {% else %}
+            Abnormal
+          {% endif %}
+            
+      battery_status:
+        friendly_name: "Battery Status"
+        value_template: >-
+          {% if states('sensor.esp32epevermppt_battery_status_raw') | int == 0 %}
+            Normal
+          {% else %}
+            Abnormal
+          {% endif %}
+          
+      battery_charging_status:
+        friendly_name: "Battery Charging Status"
+        value_template: >-
+          {% set value = states('sensor.esp32epevermppt_battery_charging_status_raw') | int %}
+          {% if value == 1 %}
+            Not Charging
+          {% else %}
+            Boost Charge
+          {% endif %}
+
+      pv_array_input_status:
+        friendly_name: "PV Array Input Status"
+        value_template: >-
+          {% set value = states('sensor.esp32epevermppt_battery_charging_status_raw') | int %}
+          {% if value == 1 %}
+            Cut Out
+          {% else %}
+            Input
+          {% endif %}
