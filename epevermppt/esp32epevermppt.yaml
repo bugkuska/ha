@@ -1,0 +1,595 @@
+esphome:
+  name: esp32epevermppt
+  friendly_name: esp32epevermppt
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+substitutions:
+  esp_name: esp32epevermppt
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "+zrIcJsd0CLmEq8wFMaKDFp2EZ0ptkxMchscCS4rUAY="
+
+ota:
+  - platform: esphome
+    password: "73e23ec71aed70b1cf062165c08fc81b"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  power_save_mode: none
+  
+  manual_ip:
+    # Set this to the IP of the ESP
+    static_ip: 192.168.1.53
+    # Set this to the IP address of the router. Often ends with .1
+    gateway: 192.168.1.1
+    # The subnet of the network. 255.255.255.0 works for most home networks.
+    subnet: 255.255.255.0
+    dns1: 192.168.1.1
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Esp32Epevermppt Hotspot"
+    password: "0814111142"
+
+# Use the on_connect trigger to turn on GPIO2
+  on_connect:
+    then:
+      - switch.turn_on: gpio2
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+  # Use the on_connect trigger to turn on GPIO2
+
+captive_portal:
+
+#UART Communication Settings
+uart:
+  tx_pin: GPIO17
+  rx_pin: GPIO16
+  baud_rate: 115200
+
+#Modbus Sensor ID Define
+modbus:
+  id: modbus1
+#Modbus Controller ESPHome Platform
+modbus_controller:
+  - id: epevermppt01
+    address: 0x1
+    modbus_id: modbus1
+    command_throttle: 200ms
+    #setup_priority: -10
+
+switch:
+# Add a switch for GPIO2
+  - platform: gpio
+    id: gpio2
+    pin: 2
+    restore_mode: ALWAYS_OFF
+
+# Turn on GPIO2 when WiFi is connected
+  - platform: template
+    name: "WiFi Connected Switch"
+    turn_on_action:
+      then:
+        - switch.turn_on: gpio2
+    lambda: |-
+      return id(wifi_status).state;
+
+#Sensor Esphome platform
+sensor:
+  # Battery voltage
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "Battery Voltage"
+    id: battery_voltage
+    address: 0x331A
+    register_type: read
+    unit_of_measurement: "V"
+    accuracy_decimals: 1
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+  #Battery MAX Voltage
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "Battery MAX Voltage"
+    id: battery_maxvoltage
+    address: 0x3302
+    register_type: read
+    unit_of_measurement: "V"
+    accuracy_decimals: 1
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+  #Battery MIN Voltage
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "Battery MIN Voltage"
+    id: battery_minvoltage
+    address: 0x3303
+    register_type: read
+    unit_of_measurement: "V"
+    accuracy_decimals: 1
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+  #Battery Current 
+  - platform: template
+    name: "Battery Current"
+    id: battery_current
+    unit_of_measurement: "A"
+    lambda: |-
+      int32_t current_l = id(battery_current_l).state;
+      int32_t current_h = id(battery_current_h).state;
+      return ((current_h << 16) | current_l) * 0.01;
+    update_interval: 5s
+  #Battery Current L
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "Battery Current L"
+    id: battery_current_l
+    unit_of_measurement: "A"
+    address: 0x331B
+    register_type: read
+    value_type: U_WORD
+    filters:
+      - multiply: 1.0
+  #Battery Current H
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "Battery Current H"
+    id: battery_current_h
+    unit_of_measurement: "A"
+    address: 0x331C
+    register_type: read
+    value_type: U_WORD
+    filters:
+      - multiply: 1.0
+  #Battery SOC
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "Battery SOC"
+    id: battery_soc
+    unit_of_measurement: "%"
+    address: 0x311A
+    register_type: read
+    value_type: U_WORD
+  #Battery status   
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    id: battery_status_raw
+    name: "Battery status raw"
+    address: 0x3200
+    register_type: read
+    value_type: U_WORD    
+  
+  # Device Status Raw (reads from register 0x3201)
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    id: device_status_raw
+    name: "Device Status Raw"
+    address: 0x3201
+    register_type: read
+    value_type: U_WORD
+
+  # EPEVER Device Status
+  - platform: template
+    name: "EPEVER Device Status"
+    lambda: |-
+      int status = int(id(device_status_raw).state) & 0x000F; // Use lower 4 bits
+      return status;
+
+  # Battery Charging Status Raw (reads from the same register 0x3201)
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    id: battery_charging_status_raw
+    name: "Battery Charging Status Raw"
+    address: 0x3201
+    register_type: read
+    value_type: U_WORD
+
+  # Battery Charging Status
+  - platform: template
+    name: "Battery Charging Status"
+    lambda: |-
+      int status = (int(id(battery_charging_status_raw).state) >> 4) & 0x000F; // Use bits 4-7
+      return status;
+
+  # PV Array Input Status
+  - platform: template
+    name: "PV Array Input Status"
+    lambda: |-
+      int status = (int(id(battery_charging_status_raw).state) >> 8) & 0x000F; // Use bits 8-11
+      return status;
+           
+  #Battery Temperature
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    id: bat_temp
+    name: "Battery Temperature"
+    device_class: "temperature"
+    address: 0x3110
+    unit_of_measurement: "°C"
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.01
+  #EPEVER Device Temperature
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    id: device_temp
+    name: "EPEVER Device Temperature"
+    device_class: "temperature"
+    address: 0x3111
+    unit_of_measurement: "°C"
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.01
+
+# Load Current
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "Load Current"
+    id: load_current
+    address: 0x310D
+    register_type: read
+    unit_of_measurement: "A"
+    accuracy_decimals: 2
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+
+  # Load Voltage
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "Load Voltage"
+    id: load_voltage
+    address: 0x310C
+    register_type: read
+    unit_of_measurement: "V"
+    accuracy_decimals: 2
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+
+  # Load Power
+  - platform: template
+    name: "Load Power"
+    id: load_power
+    unit_of_measurement: "W"
+    lambda: |-
+      int32_t power_l = id(load_power_l).state;
+      int32_t power_h = id(load_power_h).state;
+      return ((power_h << 16) | power_l) * 0.01;
+    update_interval: 5s
+
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "Load Power L"
+    id: load_power_l
+    unit_of_measurement: "W"
+    address: 0x310E
+    register_type: read
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "Load Power H"
+    id: load_power_h
+    unit_of_measurement: "W"
+    address: 0x310F
+    register_type: read
+    value_type: U_WORD
+
+  # Load Status
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "EPEVER Load Status Raw"
+    id: epever_load_status_raw
+    address: 0x3202
+    register_type: read
+    value_type: U_WORD
+
+  # PV
+  #Solar Panel Voltage
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "Solar Panel Voltage"
+    id: pv_voltage
+    address: 0x3100
+    register_type: read
+    unit_of_measurement: "V"
+    accuracy_decimals: 1
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+ #Solar Panel Current
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "Solar Panel Current"
+    id: pv_current
+    address: 0x3101
+    register_type: read
+    unit_of_measurement: "A"
+    accuracy_decimals: 1
+    value_type: U_WORD
+    filters:
+      - multiply: 0.01
+      
+  #PV Array Input Power
+  - platform: template
+    name: "PV Array Input Power"
+    id: pv_power
+    unit_of_measurement: "W"
+    lambda: |-
+      int32_t power_l = id(pv_power_l).state;
+      int32_t power_h = id(pv_power_h).state;
+      int32_t power = ((power_h << 16) | power_l) * 0.01;
+      ESP_LOGD("template", "PV Power L: %d, PV Power H: %d, PV Power: %d", power_l, power_h, power);
+      return power;
+    update_interval: 5s
+
+  #PV Array Input Power L
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "PV Array Input Power L"
+    id: pv_power_l
+    unit_of_measurement: "W"
+    address: 0x3102
+    register_type: read
+    value_type: U_WORD
+
+  #PV Array Input Power H
+  - platform: modbus_controller
+    modbus_controller_id: epevermppt01
+    name: "PV Array Input Power H"
+    id: pv_power_h
+    unit_of_measurement: "W"
+    address: 0x3103
+    register_type: read
+    value_type: U_WORD
+
+#Gernerated Energy Today
+
+  - platform: modbus_controller
+    id: energy_today_l
+    address: 0x330C
+    name: "Generated Energy Today L"
+    unit_of_measurement: "Wh"
+    register_type: read  # Change from holding to input
+    value_type: U_WORD
+  - platform: modbus_controller
+    id: energy_today_h
+    address: 0x330D
+    name: "Generated Energy Today H"
+    unit_of_measurement: "Wh"
+    register_type: read  # Change from holding to input
+    value_type: U_WORD
+
+  - platform: template
+    name: "Total Generated Energy Today"
+    unit_of_measurement: "kWh"
+    accuracy_decimals: 2
+    lambda: |-
+      return (id(energy_today_h).state * 65536 + id(energy_today_l).state) * 0.01;
+
+#Generated Energy This Month
+  - platform: modbus_controller
+    id: energy_this_month_l
+    address: 0x330E
+    name: "Generated Energy This Month L"
+    unit_of_measurement: "Wh"
+    register_type: read  # Assuming this should be input based on previous changes
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    id: energy_this_month_h
+    address: 0x330F
+    name: "Generated Energy This Month H"
+    unit_of_measurement: "Wh"
+    register_type: read  # Assuming this should be input based on previous changes
+    value_type: U_WORD
+
+  - platform: template
+    name: "Total Generated Energy This Month"
+    unit_of_measurement: "kWh"
+    accuracy_decimals: 2
+    lambda: |-
+      return (id(energy_this_month_h).state * 65536 + id(energy_this_month_l).state) * 0.01;
+
+#Generated Energy This Year
+  - platform: modbus_controller
+    id: energy_this_year_l
+    address: 0x3310
+    name: "Generated Energy This Year L"
+    unit_of_measurement: "Wh"
+    register_type: read  # Assuming input register based on your setup
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    id: energy_this_year_h
+    address: 0x3311
+    name: "Generated Energy This Year H"
+    unit_of_measurement: "Wh"
+    register_type: read  # Assuming input register based on your setup
+    value_type: U_WORD
+
+  - platform: template
+    name: "Total Generated Energy This Year"
+    unit_of_measurement: "kWh"
+    accuracy_decimals: 2
+    lambda: |-
+      return (id(energy_this_year_h).state * 65536 + id(energy_this_year_l).state) * 0.01;
+
+#Generated Energy Total
+  - platform: modbus_controller
+    id: total_energy_l
+    address: 0x3312
+    name: "Total Generated Energy L"
+    unit_of_measurement: "Wh"
+    register_type: read  # Assuming input register based on your setup
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    id: total_energy_h
+    address: 0x3313
+    name: "Total Generated Energy H"
+    unit_of_measurement: "Wh"
+    register_type: read  # Assuming input register based on your setup
+    value_type: U_WORD
+
+  - platform: template
+    name: "Total Generated Energy"
+    unit_of_measurement: "kWh"
+    accuracy_decimals: 2
+    lambda: |-
+      return (id(total_energy_h).state * 65536 + id(total_energy_l).state) * 0.01;
+
+#Consumed Energy Today
+  - platform: modbus_controller
+    id: consumed_energy_today_l
+    address: 0x3304
+    name: "Consumed Energy Today L"
+    unit_of_measurement: "Wh"
+    register_type: read  # Assuming input register based on your setup
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    id: consumed_energy_today_h
+    address: 0x3305
+    name: "Consumed Energy Today H"
+    unit_of_measurement: "Wh"
+    register_type: read  # Assuming input register based on your setup
+    value_type: U_WORD
+
+  - platform: template
+    name: "Total Consumed Energy Today"
+    unit_of_measurement: "kWh"
+    accuracy_decimals: 2
+    lambda: |-
+      return (id(consumed_energy_today_h).state * 65536 + id(consumed_energy_today_l).state) * 0.01;
+
+#Consumed Energy Month
+  - platform: modbus_controller
+    id: consumed_energy_this_month_l
+    address: 0x3306
+    name: "Consumed Energy This Month L"
+    unit_of_measurement: "Wh"
+    register_type: read  # Assuming input register based on your setup
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    id: consumed_energy_this_month_h
+    address: 0x3307
+    name: "Consumed Energy This Month H"
+    unit_of_measurement: "Wh"
+    register_type: read  # Assuming input register based on your setup
+    value_type: U_WORD
+
+  - platform: template
+    name: "Total Consumed Energy This Month"
+    unit_of_measurement: "kWh"
+    accuracy_decimals: 2
+    lambda: |-
+      return (id(consumed_energy_this_month_h).state * 65536 + id(consumed_energy_this_month_l).state) * 0.01;
+
+#Consumed Energy Year
+  - platform: modbus_controller
+    id: consumed_energy_this_year_l
+    address: 0x3308
+    name: "Consumed Energy This Year L"
+    unit_of_measurement: "Wh"
+    register_type: read  # Assuming input register based on your setup
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    id: consumed_energy_this_year_h
+    address: 0x3309
+    name: "Consumed Energy This Year H"
+    unit_of_measurement: "Wh"
+    register_type: read  # Assuming input register based on your setup
+    value_type: U_WORD
+
+  - platform: template
+    name: "Total Consumed Energy This Year"
+    unit_of_measurement: "kWh"
+    accuracy_decimals: 2
+    lambda: |-
+      return (id(consumed_energy_this_year_h).state * 65536 + id(consumed_energy_this_year_l).state) * 0.01;
+
+#Consumed Energy Total
+  - platform: modbus_controller
+    id: total_consumed_energy_l
+    address: 0x330A
+    name: "Total Consumed Energy L"
+    unit_of_measurement: "Wh"
+    register_type: read  # Assuming input register based on your setup
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    id: total_consumed_energy_h
+    address: 0x330B
+    name: "Total Consumed Energy H"
+    unit_of_measurement: "Wh"
+    register_type: read  # Assuming input register based on your setup
+    value_type: U_WORD
+
+  - platform: template
+    name: "Total Consumed Energy"
+    unit_of_measurement: "kWh"
+    accuracy_decimals: 2
+    lambda: |-
+      return (id(total_consumed_energy_h).state * 65536 + id(total_consumed_energy_l).state) * 0.01;
+
+# Check esp uptime
+  - platform: uptime
+    name: "${esp_name} - Uptime"
+    icon: mdi:clock-outline
+    update_interval: 60s
+
+# Reports the WiFi signal strength/RSSI in dB
+  - platform: wifi_signal 
+    name: "${esp_name} - WiFi Signal dB"
+    id: wifi_signal_db
+    update_interval: 60s
+    entity_category: "diagnostic"
+
+# Reports the WiFi signal strength in %
+  - platform: copy 
+    source_id: wifi_signal_db
+    name: "${esp_name} - WiFi Signal Percent"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "Signal %"
+    entity_category: "diagnostic"
+    device_class: ""   
+
+#Binary Sensor for Wifi Status
+binary_sensor:
+  - platform: status
+    name: "WiFi Status"
+    id: wifi_status
+
+  - platform: template
+    name: "EPEVER Load Status"
+    id: epever_load_status
+    lambda: |-
+      if (id(epever_load_status_raw).state == 1) {
+        return true;
+      } else {
+        return false;
+      }
