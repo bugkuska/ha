@@ -1,8 +1,11 @@
 1. Download armbian for Orange Pi Zero 3
 
+Option1: Dedicated applications (ทำถึงข้อที่ 7 แล้วรอประมาณ 20 นาที เปิดบราวเซอร์ http://ip-server:8123 )
+https://github.com/armbian/distribution/releases/download/24.8.1/Armbian_24.8.1_Orangepizero3_bookworm_current_6.6.44-homeassistant_minimal.img.xz
+
+หรือ 
+Option2: Community releases (ทำตั้งแต่ข้อที่ 1 - 12)
 https://github.com/armbian/community/releases/download/24.8.0-trunk.205/Armbian_community_24.8.0-trunk.205_Orangepizero3_bookworm_current_6.6.31_minimal.img.xz
-หรือ
-https://github.com/armbian/community/releases/download/24.11.0-trunk.202/Armbian_community_24.11.0-trunk.202_Orangepizero3_bookworm_current_6.6.44_minimal.img.xz
 
 2. เตรียม SD-Card 
 Download และติดตั้ง SD-Card Formatter จาก https://www.sdcard.org/downloads/formatter/sd-memory-card-formatter-for-windows-download/ 
@@ -22,6 +25,44 @@ Download และติดตั้ง SD-Card Formatter จาก https://www.
 #apt install net-tools  
 7.Upgrade ระบบ
 #apt upgrade 
+
+#reboot
+****Option1 หลังจาก upgrade และ reboot เสร็จให้รอประมาณ 20 นาที แล้วเอา ip-address ของบอร์ดไปเปิดที่เว็บบราวเซอร์ เช่น http://ip-address:8123
+ล็อกอินเข้าระบบด้วย root และใช้คำสั่งตรวจสอบหมายเลข ip-address และพอร์ตของ HA (8123)
+# ifconfig
+docker0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 172.17.0.1  netmask 255.255.0.0  broadcast 172.17.255.255
+        inet6 fe80::42:acff:fed6:d0a0  prefixlen 64  scopeid 0x20<link>
+        ether 02:42:ac:d6:d0:a0  txqueuelen 0  (Ethernet)
+        RX packets 814  bytes 51376 (50.1 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 1007  bytes 3838655 (3.6 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+end0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 192.168.137.212  netmask 255.255.255.0  broadcast 192.168.137.255
+        inet6 fe80::23be:a07e:c8ed:8b03  prefixlen 64  scopeid 0x20<link>
+        ether 02:00:79:b3:50:4f  txqueuelen 1000  (Ethernet)
+        RX packets 587684  bytes 849980940 (810.6 MiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 124291  bytes 8429773 (8.0 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+        device interrupt 51
+#
+# netstat -na | grep tcp
+tcp        0      0 0.0.0.0:5355            0.0.0.0:*               LISTEN
+tcp        0      0 0.0.0.0:4357            0.0.0.0:*               LISTEN
+tcp        0      0 0.0.0.0:111             0.0.0.0:*               LISTEN
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN
+tcp        0     64 192.168.137.212:22      192.168.137.1:22664     ESTABLISHED
+tcp6       0      0 :::5355                 :::*                    LISTEN
+tcp6       0      0 :::8123                 :::*                    LISTEN
+tcp6       0      0 :::4357                 :::*                    LISTEN
+tcp6       0      0 :::111                  :::*                    LISTEN
+tcp6       0      0 :::22                   :::*                    LISTEN
+#
+
+****Option2 ทำต่อไปจนถึงข้อที่ 12
 
 8.ติดตั้ง software ที่จำเป็น 
 #apt install apparmor \
