@@ -1,0 +1,84 @@
+1. Download armbian for Orange Pi Zero 3
+
+https://github.com/armbian/community/releases/download/24.8.0-trunk.205/Armbian_community_24.8.0-trunk.205_Orangepizero3_bookworm_current_6.6.31_minimal.img.xz
+หรือ
+https://github.com/armbian/community/releases/download/24.11.0-trunk.202/Armbian_community_24.11.0-trunk.202_Orangepizero3_bookworm_current_6.6.44_minimal.img.xz
+
+2. เตรียม SD-Card 
+Download และติดตั้ง SD-Card Formatter จาก https://www.sdcard.org/downloads/formatter/sd-memory-card-formatter-for-windows-download/ 
+3. Download และติดตั้ง Balena Etcher จาก https://etcher.balena.io/ 
+
+หลังจากเขียน Image ใส่ SD-Card เสร็จ ถอด SD-Card ต่อเข้าบอร์ด Orange Pi Zero 3
+ต่อสายแลน ต่อไฟเลี้ยง และใช้โปรแกรม IP Scan เพื่อตรวจหาหมายเลข IP Address สำหรับนำมาใช้่ในการ Remote เข้าเครื่องผ่าน putty 
+4. Download putty จาก https://the.earth.li/~sgtatham/putty/latest/w64/putty.exe
+
+หลังจาก Remote ได้ให้ทำตามขั้นตอนดังนี้ (user : root password: 1234)
+4.1 ตั้ง password root ใหม่
+4.2 สร้าง user ธรรมดาและกำหนด password
+
+5.Update ระบบ 
+#apt update
+6. ติดตั้ง software เพิ่มเติม 
+#apt install net-tools  
+7.Upgrade ระบบ
+#apt upgrade 
+
+8.ติดตั้ง software ที่จำเป็น 
+#apt install apparmor \
+cifs-utils curl dbus jq \
+libglib2.0-bin lsb-release \
+network-manager nfs-common \
+systemd-journal-remote \
+systemd-resolved udisks2 wget -y
+
+#echo "extraargs=apparmor=1 security=apparmor systemd.unified_cgroup_hierarchy=false systemd.legacy_systemd_cgroup_controller=false" >> /boot/armbianEnv.txt
+#update-initramfs -u
+#reboot
+
+9.Download และติดตั้ง Docker  
+#mkdir ha
+#cd ha
+#curl -fsSL https://get.docker.com -o get-docker.sh
+#sh get-docker.sh 
+
+10. Download และติดตั้ง OS Agent  
+#wget https://github.com/home-assistant/os-agent/releases/download/1.6.0/os-agent_1.6.0_linux_aarch64.deb
+#dpkg -i os-agent_1.6.0_linux_aarch64.deb
+
+11.Download และติดตั้ง homeassistant-supervised
+#wget https://github.com/home-assistant/supervised-installer/releases/download/1.6.0/homeassistant-supervised.deb
+ติดตั้ง
+#dpkg -i homeassistant-supervised.deb
+
+ถ้าขึ้น [error] Armbian 24.11.0-trunk.242 bookworm is not supported!
+
+Selecting previously unselected package homeassistant-supervised.
+(Reading database ... 27210 files and directories currently installed.)
+Preparing to unpack homeassistant-supervised.deb ...
+[warn]
+[warn] If you want more control over your own system, run
+[warn] Home Assistant as a VM or run Home Assistant Core
+[warn] via a Docker container.
+[warn]
+[error] Armbian 24.11.0-trunk.242 bookworm is not supported!
+dpkg: error processing archive homeassistant-supervised.deb (--install):
+ new homeassistant-supervised package pre-installation script subprocess returned error exit status 1
+#
+
+ให้แก้ไฟล์
+#nano /etc/os-release
+PRETTY_NAME="Armbian 24.11.0-trunk.242 bookworm"
+แก้เป็น
+PRETTY_NAME="Debian GNU/Linux 11 (bullseye)"
+
+บันทึกและออกจาก nano
+
+แล้ว Run คำสั่งติดตั้ง supervised อีกรอบ
+#dpkg -i homeassistant-supervised.deb
+
+12. เลือกเมนู qemuarm-64 >> Enter  
+
+เสร็จแล้วรอประมาณ 20 นาที
+http://ip-server:8123
+set hostname
+set network > wlan0
