@@ -6,6 +6,10 @@ https://github.com/armbian/distribution/releases/download/24.2.2/Armbian_24.2.2_
 หรือ 
 Option2: Community releases (ทำตั้งแต่ข้อที่ 1 - 12)
 https://github.com/armbian/community/releases/download/24.5.0-trunk.532/Armbian_community_24.5.0-trunk.532_Orangepizero3_bookworm_current_6.6.30_minimal.img.xz
+หรือ
+https://github.com/armbian/community/releases/download/24.8.0-trunk.205/Armbian_community_24.8.0-trunk.205_Orangepizero3_bookworm_current_6.6.31_minimal.img.xz
+หรือ
+https://github.com/armbian/community/releases/download/24.11.0-trunk.202/Armbian_community_24.11.0-trunk.202_Orangepizero3_bookworm_current_6.6.44_minimal.img.xz
 
 2. เตรียม SD-Card 
 Download และติดตั้ง SD-Card Formatter จาก https://www.sdcard.org/downloads/formatter/sd-memory-card-formatter-for-windows-download/ 
@@ -84,6 +88,8 @@ systemd-resolved udisks2 wget -y
 
 11.Download และติดตั้ง homeassistant-supervised
 #wget https://github.com/home-assistant/supervised-installer/releases/download/1.6.0/homeassistant-supervised.deb
+หรือ
+#wget https://github.com/home-assistant/supervised-installer/releases/download/1.8.0/homeassistant-supervised.deb
 ติดตั้ง
 #dpkg -i homeassistant-supervised.deb
 
