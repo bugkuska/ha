@@ -1,0 +1,221 @@
+esphome:
+  name: esp32sht32v2
+  friendly_name: esp32sht32v2
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+substitutions:
+  esp_name: esp32sht32v2
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "116HDSvnlDzI/ZDNIgKpaSyi4k9fjzQzCaEk2Po5IuE="
+
+ota:
+  - platform: esphome
+    password: "63682fc82ff4c91200c49bddd1ae15d6"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  power_save_mode: none
+  
+  manual_ip:
+    # Set this to the IP of the ESP
+    static_ip: 192.168.1.55
+    # Set this to the IP address of the router. Often ends with .1
+    gateway: 192.168.1.1
+    # The subnet of the network. 255.255.255.0 works for most home networks.
+    subnet: 255.255.255.0
+    dns1: 192.168.1.1
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Esp32Sht32V2FBHotspot"
+    password: "0814111142"
+
+# Use the on_connect trigger to turn on GPIO2
+  on_connect:
+    then:
+      - switch.turn_on: gpio2
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+captive_portal:
+
+uart:
+  id: mod_bus
+  tx_pin: 17
+  rx_pin: 16
+  baud_rate: 9600
+  stop_bits: 1
+  parity: none
+  data_bits: 8
+
+#Modbus Sensor
+modbus:
+  id: modbus_sensor
+
+modbus_controller:
+# Modbus device addr slave id1 - ETT SHT31V2 (Humidity&Temperature)
+  - id: sht31v201
+    address: 0x1
+    modbus_id: modbus_sensor
+    command_throttle: 200ms
+    setup_priority: -10
+    update_interval: 10s
+
+# Modbus device addr slave id2 - ETT SHT31V2 (Humidity&Temperature)
+  - id: sht31v202
+    address: 0x2
+    modbus_id: modbus_sensor
+    command_throttle: 200ms
+    setup_priority: -10
+    update_interval: 10s
+
+# Modbus device addr slave id3 - ETT SHT31V2 (Humidity&Temperature)
+  - id: sht31v203
+    address: 0x3
+    modbus_id: modbus_sensor
+    command_throttle: 200ms
+    setup_priority: -10
+    update_interval: 10s
+binary_sensor:
+  - platform: status
+    name: "WiFi Status"
+    id: wifi_status
+
+#platform switch
+switch:
+# switch for GPIO2
+  - platform: gpio
+    id: gpio2
+    pin: 2
+    restore_mode: ALWAYS_OFF
+
+# Turn on GPIO2 when WiFi is connected
+  - platform: template
+    name: "WiFi Connected Switch"
+    turn_on_action:
+      then:
+        - switch.turn_on: gpio2
+    lambda: |-
+      return id(wifi_status).state;  
+
+#Platform Sensor
+sensor:
+# Modbus device addr slave id1 - ZTS-3000 (Humidity&Temperature)
+  #Temperature
+  - platform: modbus_controller
+    modbus_controller_id: sht31v201
+    id: sht31v201_Temperature
+    name: "ID1 Temperature"
+    device_class: TEMPERATURE
+    address: 0x001
+    unit_of_measurement: "°C"
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.1
+  #Humidity
+  - platform: modbus_controller
+    modbus_controller_id: sht31v201
+    id: sht31v201_Humidity
+    name: "ID1 Humidity"
+    device_class: HUMIDITY
+    address: 0x002
+    unit_of_measurement: "%"
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.1  
+
+# Modbus device addr slave id2 - ZTS-3000 (Humidity&Temperature)
+  #Temperature
+  - platform: modbus_controller
+    modbus_controller_id: sht31v202
+    id: sht31v202_Temperature
+    name: "ID2 Temperature"
+    device_class: TEMPERATURE
+    address: 0x001
+    unit_of_measurement: "°C"
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.1
+  #Humidity
+  - platform: modbus_controller
+    modbus_controller_id: sht31v202
+    id: sht31v202_Humidity
+    name: "ID2 Humidity"
+    device_class: HUMIDITY
+    address: 0x002
+    unit_of_measurement: "%"
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.1  
+
+# Modbus device addr slave id3 - ZTS-3000 (Humidity&Temperature)
+  #Temperature
+  - platform: modbus_controller
+    modbus_controller_id: sht31v203
+    id: sht31v203_Temperature
+    name: "ID3 Temperature"
+    device_class: TEMPERATURE
+    address: 0x001
+    unit_of_measurement: "°C"
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.1
+  #Humidity
+  - platform: modbus_controller
+    modbus_controller_id: sht31v203
+    id: sht31v203_Humidity
+    name: "ID3 Humidity"
+    device_class: HUMIDITY
+    address: 0x002
+    unit_of_measurement: "%"
+    register_type: read
+    value_type: U_WORD
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.1  
+
+#Check Uptime
+  - platform: uptime
+    name: "${esp_name} - Uptime"
+    icon: mdi:clock-outline
+    update_interval: 60s
+
+#Wi-Fi Signal in dB    
+  - platform: wifi_signal # Reports the WiFi signal strength/RSSI in dB
+    name: "${esp_name} - WiFi Signal dB"
+    id: wifi_signal_db
+    update_interval: 60s
+    entity_category: "diagnostic"
+
+#Wi-Fi Signal in %
+  - platform: copy # Reports the WiFi signal strength in %
+    source_id: wifi_signal_db
+    name: "${esp_name} - WiFi Signal Percent"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "Signal %"
+    entity_category: "diagnostic"
+    device_class: ""
