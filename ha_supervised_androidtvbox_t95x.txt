@@ -1,0 +1,151 @@
+ติดตั้ง Home Assistant บนกล่อง Android TV Box (T95X) (TX3mini)
+Hareware
+
+1. Android TV BOX (T95X), TX3 Mini Ram2GB/Rom8/16/32GB (Nand Flash, EMMC)
+2. จอภาพ (HMDI)
+3. สายแลน
+4. Micro SDCard
+5. ไขควงเล็ก 
+6. Keyboard
+7. Power Adapter 5v2v dc 2.5mm
+
+Software
+1. OS : Linux Armbian (Debian, ubuntu) apt update, apt install software
+2. SD-card formatter
+3. Belana etcher
+4. putty
+
+1.เตรียม SD-Card
+1.1 Download and Install sd-card formatter
+https://www.sdcard.org/downloads/formatter/sd-memory-card-formatter-for-windows-download/
+1.2 Download and Install balena etcher สำหรับเขียน image
+https://etcher.balena.io/
+
+
+2. Download & install Armbian
+https://github.com/ophub/amlogic-s9xxx-armbian/releases
+เลือก CPU ที่ตรงกับ Hardware ของเรา
+S905x-t95
+https://github.com/ophub/amlogic-s9xxx-armbian/releases/download/Armbian_lunar_save_2023.10/Armbian_23.11.0_amlogic_s905x-t95_lunar_5.15.136_server_2023.10.20.img.gz
+s905l2
+https://github.com/ophub/amlogic-s9xxx-armbian/releases/download/Armbian_lunar_save_2023.10/Armbian_23.11.0_amlogic_s905l2_lunar_5.15.136_server_2023.10.20.img.gz
+0814111142
+
+192.168.1.151
+
+ต่อ Keyboard, สาย Lan, เสียบ SD-Card เตรียมไขควงเล็กๆ สำหรับจิ้มปุ่ม reset (รุ่น T95x จิ้มตรงช่องเสียบ AV) 
+จิ้มปุ่ม reset ค้างไว้ ต่อสายไฟเลี้ยง จนขึ้น logo Armlogic (หัวเสือ) ประมาณ 3-5 วิ แล้วปล่อย
+if
+รอกระบวนการโหลดไฟ 
+ตั้ง รหัสผ่าน root
+สร้าง user
+
+
+3. #apt update
+4. #apt install net-tools
+	- netstat 
+	- ifconfig
+   #ifconfig
+  inet 192.168.1.151
+   
+5. #apt upgrade > config iperf3 > Yes > enter
+6. #apt-get install jq wget curl avahi-daemon udisks2 libglib2.0-bin network-manager dbus apparmor -y
+
+หรือ
+apt install \
+apparmor \
+cifs-utils \
+curl \
+dbus \
+jq \
+libglib2.0-bin \
+lsb-release \
+network-manager \
+nfs-common \
+systemd-journal-remote \
+systemd-resolved \
+udisks2 \
+wget -y
+.......
+
+7. #curl -fsSL https://get.docker.com -o get-docker.sh
+   #sh get-docker.sh 
+	*ถ้าสำเร็จช่วงท้ายๆ จะขึ้นประมาณนี้ครับ
+	Version:           24.0.7
+ 	API version:       1.43
+ 	Go version:        go1.20.10
+	......
+
+8. #nano /etc/os-release
+
+PRETTY_NAME="Armbian 23.11.0-trunk lunar"
+แก้เป็น
+PRETTY_NAME="Debian GNU/Linux 11 (bullseye)"
+
+9. #wget https://github.com/home-assistant/os-agent/releases/download/1.2.2/os-agent_1.2.2_linux_aarch64.deb
+หรือ
+   #wget https://github.com/home-assistant/os-agent/releases/download/1.6.0/os-agent_1.6.0_linux_aarch64.deb
+   #wget https://github.com/home-assistant/os-agent/releases/download/1.6.0/os-agent_1.6.0_linux_aarch64.deb
+
+x86
+#wget https://github.com/home-assistant/os-agent/releases/download/1.6.0/os-agent_1.6.0_linux_x86_64.deb
+
+10. #dpkg -i os-agent_1.2.2_linux_aarch64.deb
+#dpkg -i os-agent_1.6.0_linux_aarch64.deb
+
+11. #wget https://github.com/home-assistant/supervised-installer/releases/latest/download/homeassistant-supervised.deb
+    #wget -O homeassistant-supervised.deb https://github.com/home-assistant/supervised-installer/releases/latest/download/homeassistant-supervised.deb
+หรือ
+    #wget https://github.com/home-assistant/supervised-installer/releases/download/1.5.0/homeassistant-supervised.deb
+
+12. #dpkg -i homeassistant-supervised.deb
+หรือ
+    #dpkg -i 
+**ถ้า run สั่งแล้วขึ้น dpkg: dependency problems บอกว่ายังไม่ติดตั้ง systemd-journal-remote
+ให้ไปทำคำสั่งข้อที่ 13
+root@armbian:~# dpkg -i homeassistant-supervised.deb
+Selecting previously unselected package homeassistant-supervised.
+(Reading database ... 35533 files and directories currently installed.)
+Preparing to unpack homeassistant-supervised.deb ...
+[warn]
+[warn] If you want more control over your own system, run
+[warn] Home Assistant as a VM or run Home Assistant Core
+[warn] via a Docker container.
+[warn]
+Adding 'diversion of /etc/NetworkManager/NetworkManager.conf to /etc/NetworkManager/NetworkManager.conf.real by homeassistant-supervised'
+Adding 'diversion of /etc/NetworkManager/system-connections/default to /etc/NetworkManager/system-connections/default.real by homeassistant-supervised'
+Adding 'diversion of /etc/docker/daemon.json to /etc/docker/daemon.json.real by homeassistant-supervised'
+Adding 'diversion of /etc/network/interfaces to /etc/network/interfaces.real by homeassistant-supervised'
+Unpacking homeassistant-supervised (1.5.0) ...
+dpkg: dependency problems prevent configuration of homeassistant-supervised:
+ homeassistant-supervised depends on systemd-journal-remote; however:
+  Package systemd-journal-remote is not installed.
+ homeassistant-supervised depends on systemd-resolved; however:
+  Package systemd-resolved is not installed.
+
+dpkg: error processing package homeassistant-supervised (--install):
+ dependency problems - leaving unconfigured
+Errors were encountered while processing:
+ homeassistant-supervised
+root@armbian:~# apt --fix-missing install
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+You might want to run 'apt --fix-broken install' to correct these.
+The following packages have unmet dependencies:
+ homeassistant-supervised : Depends: systemd-journal-remote but it is not installed
+                            Depends: systemd-resolved but it is not installed
+E: Unmet dependencies. Try 'apt --fix-broken install' with no packages (or specify a solution).
+root@armbian:~# apt --fix-broken instal
+
+13. #apt --fix-broken install > Y > Enter
+(raspberry pi : dpkg --configure -a)
+14. เลือกเมนู qemuarm-64 >> Enter  
+
+
+เสร็จแล้วรอประมาณ 20 นาที
+
+http://ip-server:8123
+
+set hostname
+set network > wlan0
