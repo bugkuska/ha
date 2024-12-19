@@ -63,6 +63,9 @@ run คำสั่ง doanload docker script อีกครั้ง
 7.Download และติดตั้ง homeassistant-supervised
 #wget https://github.com/home-assistant/supervised-installer/releases/download/1.8.0/homeassistant-supervised.deb
 #dpkg -i homeassistant-supervised.deb
+ถ้า error 
+#apt --fix-broken install
+
 (Reading database ... 37739 files and directories currently installed.)
 Preparing to unpack homeassistant-supervised.deb ...
 [warn]
