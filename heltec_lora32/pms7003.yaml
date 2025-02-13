@@ -1,0 +1,141 @@
+esphome:
+  name: esp32-pm25
+  friendly_name: esp32_pm25
+
+esp32:
+  board: heltec_wifi_lora_32_V2  # ✅ ใช้บอร์ด Heltec LoRa32 V2
+  framework:
+    type: arduino
+
+substitutions:
+  esp_name: esp32_pm25
+
+# ✅ เปิดใช้งาน Logging
+logger:
+
+# ✅ เปิดใช้งาน Home Assistant API
+api:
+  encryption:
+    key: ""
+# ✅ ตั้งค่า OTA Update
+ota:
+  - platform: esphome
+    password: ""
+
+# ✅ ตั้งค่า WiFi
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  power_save_mode: none
+  
+  manual_ip:
+    # Set this to the IP of the ESP
+    static_ip: 192.168.1.95
+    # Set this to the IP address of the router. Often ends with .1
+    gateway: 192.168.1.1
+    # The subnet of the network. 255.255.255.0 works for most home networks.
+    subnet: 255.255.255.0
+    dns1: 192.168.1.1
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Esp32-Pm25-Hotspot"
+    password: "0814111142"
+
+# ✅ กำหนดให้ GPIO25 เปิดเมื่อเชื่อมต่อ WiFi
+  on_connect:
+    then:
+      - switch.turn_on: gpio25
+# ✅ ตั้งค่าการซิงค์เวลา      
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+# ✅ เปิดใช้งาน OLED Display
+i2c:
+  sda: 4
+  scl: 15
+  scan: true
+
+font:
+  - file: "fonts/OpenSans-Regular.ttf"
+    id: xfont
+    size: 10
+
+captive_portal:
+
+# ✅ เพิ่ม PMS7003 ผ่าน UART
+uart:
+  rx_pin: GPIO12  # Pin RX ต่อกับ PMS7003 TX
+  tx_pin: GPIO13  # Pin TX ต่อกับ PMS7003 RX
+  baud_rate: 9600  # ความเร็วของ PMS7003
+
+# ✅ แสดงข้อมูล PM2.5 และ PM10.0 บน OLED
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    reset_pin: GPIO16
+    address: 0x3C
+    lambda: |-
+      it.print(0, 0, id(xfont),"579/4 MahaSarakham:");
+      it.print(0, 12, id(xfont),"PMS7003 Data:");
+      it.printf(0, 24, id(xfont),"PM1.0: %.1f ug/m3", id(pm_1_0).state);
+      it.printf(0, 36, id(xfont),"PM2.5: %.1f ug/m3", id(pm_2_5).state);
+      it.printf(0, 48, id(xfont),"PM10.0: %.1f ug/m3", id(pm_10_0).state);
+
+binary_sensor:
+  - platform: status
+    name: "WiFi Status"
+    id: wifi_status
+
+switch:
+  - platform: gpio
+    id: gpio25
+    pin: 25
+    restore_mode: ALWAYS_OFF
+
+  - platform: template
+    name: "WiFi Connected Switch"
+    turn_on_action:
+      then:
+        - switch.turn_on: gpio25
+    lambda: |-
+      return id(wifi_status).state;
+
+# ✅ เพิ่ม PMS7003 Sensor
+sensor:
+  - platform: pmsx003
+    type: PMSX003  # ใช้ PMS7003
+    pm_1_0:
+      name: "PM1.0 Dust Density"
+      id: pm_1_0
+      unit_of_measurement: "µg/m³"
+      accuracy_decimals: 1
+    pm_2_5:
+      name: "PM2.5 Dust Density"
+      id: pm_2_5
+      unit_of_measurement: "µg/m³"
+      accuracy_decimals: 1
+    pm_10_0:
+      name: "PM10.0 Dust Density"
+      id: pm_10_0
+      unit_of_measurement: "µg/m³"
+      accuracy_decimals: 1
+
+  - platform: uptime
+    name: "${esp_name} - Uptime"
+    icon: mdi:clock-outline
+    update_interval: 60s
+
+  - platform: wifi_signal
+    name: "${esp_name} - WiFi Signal dB"
+    id: wifi_signal_db
+    update_interval: 60s
+    entity_category: "diagnostic"
+
+  - platform: template
+    name: "${esp_name} - WiFi Signal Percent"
+    lambda: |-
+      return min(max(2 * (id(wifi_signal_db).state + 100.0), 0.0), 100.0);
+    unit_of_measurement: "%"
+    entity_category: "diagnostic"
