@@ -22,7 +22,7 @@ systemd-resolved udisks2 wget -y
 #curl -fsSL https://get.docker.com -o get-docker.sh
 **ถ้าขึ้น error don't resolve hostname 
 ลอง ping ไปที่ Google 
-# ping www.google.com
+#ping www.google.com
 ping: www.google.com: Temporary failure in name resolution
 #
 Disable systemd-resolve
@@ -32,7 +32,7 @@ Stop systemd services
 ลบไฟล์ resolve.conf เดิม
 #rm /etc/resolv.conf
 สร้างไฟล์ resolve.conf ขึ้นมาใหม่
-# nano /etc/resolv.conf
+#nano /etc/resolv.conf
 เพิ่ม
 
 nameserver 8.8.8.8
@@ -47,7 +47,7 @@ Enable systemd-resolve
 #systemctl enable systemd-resolved.service
 
 ลอง ping ไปที่ google อีกครั้ง
-# ping www.google.com
+#ping www.google.com
 PING www.google.com(kul09s04-in-x04.1e100.net (2404:6800:4001:802::2004)) 56 data bytes
 64 bytes from kul09s21-in-x04.1e100.net (2404:6800:4001:802::2004): icmp_seq=1 ttl=115 time=42.5 ms
 #
