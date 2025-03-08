@@ -51,16 +51,58 @@ Enable systemd-resolve
 PING www.google.com(kul09s04-in-x04.1e100.net (2404:6800:4001:802::2004)) 56 data bytes
 64 bytes from kul09s21-in-x04.1e100.net (2404:6800:4001:802::2004): icmp_seq=1 ttl=115 time=42.5 ms
 #
+*กด ctrl+c เพื่อหยุดการ ping
 
 run คำสั่ง doanload docker script อีกครั้ง
 #curl -fsSL https://get.docker.com -o get-docker.sh
 #sh get-docker.sh 
+**ตรงนี้ใช้เวลาในการ Download ติดตั้ง Docker สักพัก รอจนกว่าจะเสร็จ
 
 6. Download และติดตั้ง OS Agent  
+ให้ติดตั้ง Version 1.7.x
+#wget https://github.com/home-assistant/os-agent/releases/download/1.7.2/os-agent_1.7.2_linux_x86_64.deb
+#dpkg -i os-agent_1.7.2_linux_x86_64.deb
+
+สำรองเผื่อ Version ด้านบนมีปัญหา
 #wget https://github.com/home-assistant/os-agent/releases/download/1.6.0/os-agent_1.6.0_linux_x86_64.deb
 #dpkg -i os-agent_1.6.0_linux_x86_64.deb
 
 7.Download และติดตั้ง homeassistant-supervised
+ให้ติดตั้ง Version 3.x
+#wget https://github.com/home-assistant/supervised-installer/releases/download/3.0.0/homeassistant-supervised.deb
+#dpkg -i homeassistant-supervised.deb
+หลังจากใช้คำสั่งติดตั้งเสร็จ รอประมาณ 5-10 นาที 
+Check หมายเลขพอร์ต 8123 อยู่ในสถานะ LISTEN หรือยัง
+
+# netstat -na | grep tcp
+tcp        0      0 0.0.0.0:5355            0.0.0.0:*               LISTEN
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN
+tcp        0      0 0.0.0.0:111             0.0.0.0:*               LISTEN
+tcp        0      0 192.168.1.131:40000     0.0.0.0:*               LISTEN
+tcp        0      0 127.0.0.1:18554         0.0.0.0:*               LISTEN
+tcp        0      0 0.0.0.0:4357            0.0.0.0:*               LISTEN
+tcp        0      0 0.0.0.0:8123            0.0.0.0:*               LISTEN
+tcp        0      0 127.0.0.1:11984         0.0.0.0:*               LISTEN
+tcp        0     64 192.168.1.131:22        192.168.1.157:23840     ESTABLISHED
+tcp        0      0 192.168.1.131:39856     192.168.1.163:8009      ESTABLISHED
+tcp        0      0 127.0.0.1:11984         127.0.0.1:57000         ESTABLISHED
+tcp        0      0 127.0.0.1:57000         127.0.0.1:11984         ESTABLISHED
+tcp        0      0 172.30.32.1:8123        172.30.32.2:56762       ESTABLISHED
+tcp        0      0 192.168.1.131:47486     192.168.1.155:8009      ESTABLISHED
+tcp6       0      0 :::5355                 :::*                    LISTEN
+tcp6       0      0 :::22                   :::*                    LISTEN
+tcp6       0      0 :::18555                :::*                    LISTEN
+tcp6       0      0 fe80::3931:cab2:3:40000 :::*                    LISTEN
+tcp6       0      0 :::111                  :::*                    LISTEN
+tcp6       0      0 :::4357                 :::*                    LISTEN
+tcp6       0      0 :::8123                 :::*                    LISTEN
+tcp6       0      0 2405:9800:ba21:41:39880 2606:4700:20::681a:4:80 TIME_WAIT
+#
+
+ถ้าหมายเลขพอร์ต 8123 อยู่ในสถานะ LISTEN ให้เปิดเว็บบราวเซอร์
+http://ip address:8123 เช่น http://192.168.1.131:8123 เพื่อเข้าสู่ขั้นตอน onboarding ติดตั้งผ่านหน้าเว็บ
+
+สำรองเผื่อ Version ด้านบนมีปัญหา
 #wget https://github.com/home-assistant/supervised-installer/releases/download/1.8.0/homeassistant-supervised.deb
 #dpkg -i homeassistant-supervised.deb
 ถ้า error 
