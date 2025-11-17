@@ -33,7 +33,7 @@ systemd-resolved udisks2 wget -y
 7.Download และติดตั้ง homeassistant-supervised
 #wget https://github.com/home-assistant/supervised-installer/releases/download/1.7.0/homeassistant-supervised.deb
 หรือ
-#wget https://github.com/home-assistant/supervised-installer/releases/download/3.1.0/homeassistant-supervised.deb
+#wget https://github.com/home-assistant/supervised-installer/releases/download/3.0.0/homeassistant-supervised.deb
 #dpkg -i homeassistant-supervised.deb
 
 8. เลือกเมนู 
