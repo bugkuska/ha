@@ -1,4 +1,3 @@
-
 # Loads default set of integrations. Do not remove.
 default_config:
 
@@ -11,26 +10,22 @@ script: !include scripts.yaml
 scene: !include scenes.yaml
 
 # =========================
-# Template Sensors (ค่าไฟ)
+# Modern Template Sensors (ค่าไฟ)
 # =========================
-sensor:
-  - platform: template
-    sensors:
-
+template:
+  - sensor:
       # (ตัวเลือก) แสดงกำลังไฟฟ้า W จาก PZEM016
-      pzem016_power_meter:
-        friendly_name: "PZEM016 Power Meter"
-        unit_of_measurement: "W"
+      - name: "PZEM016 Power Meter"
         unique_id: pzem016_power_meter
-        value_template: >
-          {{ states('sensor.esp32_pzem016_powermon_power') | float(0) }}
-        icon_template: mdi:flash
+        unit_of_measurement: "W"
+        icon: mdi:flash
+        state: "{{ states('sensor.esp32_pzem016_powermon_power') | float(0) }}"
 
-      cost_150:
-        friendly_name: "Energy Cost 0-150 Unit"
-        unit_of_measurement: "THB"
+      - name: "Energy Cost 0-150 Unit"
         unique_id: cost_150
-        value_template: >
+        unit_of_measurement: "THB"
+        icon: mdi:transmission-tower
+        state: >
           {% set unit = states('sensor.monthly_energy') | float(0) %}
           {% set price_150 = 3.2484 %}
           {% if unit <= 150 %}
@@ -38,89 +33,81 @@ sensor:
           {% else %}
             {{ (150 * price_150) | round(2) }}
           {% endif %}
-        icon_template: mdi:transmission-tower
 
-      cost_250:
-        friendly_name: "Energy Cost 151-400 Unit"
-        unit_of_measurement: "THB"
+      - name: "Energy Cost 151-400 Unit"
         unique_id: cost_250
-        value_template: >
+        unit_of_measurement: "THB"
+        icon: mdi:transmission-tower
+        state: >
           {% set unit = states('sensor.monthly_energy') | float(0) %}
           {% set price_250 = 4.2218 %}
           {% if unit <= 150 %}
-            {{ 0 | round(2) }}
+            {{ 0 }}
           {% elif unit <= 400 %}
             {{ ((unit - 150) * price_250) | round(2) }}
           {% else %}
             {{ (250 * price_250) | round(2) }}
           {% endif %}
-        icon_template: mdi:transmission-tower
 
-      cost_400:
-        friendly_name: "Energy Cost 400+ Unit"
-        unit_of_measurement: "THB"
+      - name: "Energy Cost 400+ Unit"
         unique_id: cost_400
-        value_template: >
+        unit_of_measurement: "THB"
+        icon: mdi:transmission-tower
+        state: >
           {% set unit = states('sensor.monthly_energy') | float(0) %}
           {% set price_400 = 4.4217 %}
           {% if unit < 400 %}
-            {{ 0 | round(2) }}
+            {{ 0 }}
           {% else %}
             {{ ((unit - 400) * price_400) | round(2) }}
           {% endif %}
-        icon_template: mdi:transmission-tower
 
-      base_cost:
-        friendly_name: "Base Energy Cost"
-        unit_of_measurement: "THB"
+      - name: "Base Energy Cost"
         unique_id: base_cost
-        value_template: >
+        unit_of_measurement: "THB"
+        icon: mdi:cash-100
+        state: >
           {% set c150 = states('sensor.cost_150') | float(0) %}
           {% set c250 = states('sensor.cost_250') | float(0) %}
           {% set c400 = states('sensor.cost_400') | float(0) %}
           {{ (c150 + c250 + c400) | round(2) }}
-        icon_template: mdi:cash-100
 
-      base_cost_services_charge:
-        friendly_name: "Base Energy Cost + Service Charge"
-        unit_of_measurement: "THB"
+      - name: "Base Energy Cost + Service Charge"
         unique_id: base_cost_services_charge
-        value_template: >
+        unit_of_measurement: "THB"
+        icon: mdi:cash-plus
+        state: >
           {% set base = states('sensor.base_cost') | float(0) %}
           {% set svc  = states('input_number.servicecharge') | float(0) %}
           {{ (base + svc) | round(2) }}
-        icon_template: mdi:cash-plus
 
-      ft_cost:
-        friendly_name: "FT Cost"
-        unit_of_measurement: "THB"
+      - name: "FT Cost"
         unique_id: ft_cost
-        value_template: >
+        unit_of_measurement: "THB"
+        icon: mdi:flash
+        state: >
           {% set unit = states('sensor.monthly_energy') | float(0) %}
           {% set ft   = states('input_number.ftcharge') | float(0) %}
           {{ (unit * ft) | round(2) }}
-        icon_template: mdi:flash
 
-      vat_7_percent:
-        friendly_name: "VAT 7%"
-        unit_of_measurement: "THB"
+      - name: "VAT 7%"
         unique_id: vat_7_percent
-        value_template: >
+        unit_of_measurement: "THB"
+        icon: mdi:percent
+        state: >
           {% set a = states('sensor.base_cost_services_charge') | float(0) %}
           {% set b = states('sensor.ft_cost') | float(0) %}
           {{ ((a + b) * 0.07) | round(2) }}
-        icon_template: mdi:percent
 
-      total_cost:
-        friendly_name: "Total Cost"
-        unit_of_measurement: "THB"
+      - name: "Total Cost"
         unique_id: total_cost
-        value_template: >
+        unit_of_measurement: "THB"
+        icon: mdi:cash-check
+        state: >
           {% set a = states('sensor.base_cost_services_charge') | float(0) %}
           {% set b = states('sensor.ft_cost') | float(0) %}
           {% set v = states('sensor.vat_7_percent') | float(0) %}
           {{ (a + b + v) | round(2) }}
-        icon_template: mdi:cash-check
 
 
 # =========================
@@ -142,6 +129,7 @@ utility_meter:
       hours: 0
       minutes: 0
 
+
 # =========================
 # Input Number (Services & ft)
 # =========================
@@ -161,4 +149,3 @@ input_number:
     max: 100
     step: 0.0001
     mode: box
-
