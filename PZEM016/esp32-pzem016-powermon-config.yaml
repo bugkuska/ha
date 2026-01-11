@@ -19,7 +19,8 @@ template:
         unique_id: pzem016_power_meter
         unit_of_measurement: "W"
         icon: mdi:flash
-        state: "{{ states('sensor.esp32_pzem016_powermon_power') | float(0) }}"
+        state: "{{ states('sensor.esp32_pzem016_powermon_power') | float | round(1) }}"
+      
 
       # แสดง kWh (รอบปฏิทิน) ทศนิยม 4 ตำแหน่ง
       - name: "Monthly Energy (Display)"
@@ -237,4 +238,118 @@ input_number:
     min: 0
     max: 10
     step: 0.0001
+    mode: box
+    
+  pea_prev_bill_kwh:
+    name: PEA Previous Bill kWh
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    step: 0.0001
+    mode: box
+
+  pea_prev_bill_total:
+    name: PEA Previous Bill Total
+    icon: mdi:cash-check
+    min: 0
+    max: 999999
+    step: 0.01
+    mode: box
+
+  # ---------- kWh history ----------
+  pea_bill_kwh_1:
+    name: PEA Bill kWh (1) ล่าสุด
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    step: 0.0001
+    mode: box
+
+  pea_bill_kwh_2:
+    name: PEA Bill kWh (2)
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    step: 0.0001
+    mode: box
+
+  pea_bill_kwh_3:
+    name: PEA Bill kWh (3)
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    step: 0.0001
+    mode: box
+
+  pea_bill_kwh_4:
+    name: PEA Bill kWh (4)
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    step: 0.0001
+    mode: box
+
+  pea_bill_kwh_5:
+    name: PEA Bill kWh (5)
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    step: 0.0001
+    mode: box
+
+  pea_bill_kwh_6:
+    name: PEA Bill kWh (6) เก่าสุด
+    icon: mdi:counter
+    min: 0
+    max: 999999
+    step: 0.0001
+    mode: box
+
+  # ---------- Total THB history ----------
+  pea_bill_total_1:
+    name: PEA Bill Total (1) ล่าสุด
+    icon: mdi:cash-check
+    min: 0
+    max: 999999
+    step: 0.01
+    mode: box
+
+  pea_bill_total_2:
+    name: PEA Bill Total (2)
+    icon: mdi:cash-check
+    min: 0
+    max: 999999
+    step: 0.01
+    mode: box
+
+  pea_bill_total_3:
+    name: PEA Bill Total (3)
+    icon: mdi:cash-check
+    min: 0
+    max: 999999
+    step: 0.01
+    mode: box
+
+  pea_bill_total_4:
+    name: PEA Bill Total (4)
+    icon: mdi:cash-check
+    min: 0
+    max: 999999
+    step: 0.01
+    mode: box
+
+  pea_bill_total_5:
+    name: PEA Bill Total (5)
+    icon: mdi:cash-check
+    min: 0
+    max: 999999
+    step: 0.01
+    mode: box
+
+  pea_bill_total_6:
+    name: PEA Bill Total (6) เก่าสุด
+    icon: mdi:cash-check
+    min: 0
+    max: 999999
+    step: 0.01
     mode: box
