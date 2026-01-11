@@ -21,57 +21,125 @@ template:
         icon: mdi:flash
         state: "{{ states('sensor.esp32_pzem016_powermon_power') | float(0) }}"
 
+      # แสดง kWh (รอบปฏิทิน) ทศนิยม 4 ตำแหน่ง
+      - name: "Monthly Energy (Display)"
+        unique_id: monthly_energy_display
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: measurement
+        icon: mdi:calendar-month
+        state: "{{ states('sensor.monthly_energy') | float(0) | round(4) }}"
+
+      # แสดง kWh (รอบบิล PEA: 16->15) ทศนิยม 4 ตำแหน่ง
+      - name: "Monthly Energy PEA (Display)"
+        unique_id: monthly_energy_pea_display
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: measurement
+        icon: mdi:calendar-sync
+        state: "{{ states('sensor.monthly_energy_pea') | float(0) | round(4) }}"
+
+      # =========================
+      # ✅ คำนวณค่าไฟ “ตามรอบบิล PEA”
+      # =========================
+      - name: "PEA Billing Period"
+        unique_id: pea_billing_period
+        icon: mdi:calendar-range
+        state: >
+          {% set t = now() %}
+          {% set day = t.day %}
+          {% if day >= 16 %}
+            {% set start = t.replace(day=16) %}
+            {% set end = (t.replace(day=1) + timedelta(days=32)).replace(day=15) %}
+          {% else %}
+            {% set start = (t.replace(day=1) - timedelta(days=1)).replace(day=16) %}
+            {% set end = t.replace(day=15) %}
+          {% endif %}
+          {{ start.strftime('%d %b') }} – {{ end.strftime('%d %b') }}
+
+      - name: "PEA Billing Period (TH)"
+        unique_id: pea_billing_period_th
+        icon: mdi:calendar-range
+        state: >
+          {% set t = now() %}
+          {% set day = t.day %}
+
+          {% if day >= 16 %}
+            {% set start = t.replace(day=16) %}
+            {% set end = (t.replace(day=1) + timedelta(days=32)).replace(day=15) %}
+          {% else %}
+            {% set start = (t.replace(day=1) - timedelta(days=1)).replace(day=16) %}
+            {% set end = t.replace(day=15) %}
+          {% endif %}
+
+          {% set th = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'] %}
+          {% set s_m = th[start.month-1] %}
+          {% set e_m = th[end.month-1] %}
+
+          {% set s_y = start.year + 543 %}
+          {% set e_y = end.year + 543 %}
+
+          {{ start.day }} {{ s_m }} {{ s_y }} – {{ end.day }} {{ e_m }} {{ e_y }}
+
+
+      # 0–150 หน่วย
       - name: "Energy Cost 0-150 Unit"
         unique_id: cost_150
         unit_of_measurement: "THB"
         icon: mdi:transmission-tower
         state: >
-          {% set unit = states('sensor.monthly_energy') | float(0) %}
-          {% set price_150 = 3.2484 %}
-          {% if unit <= 150 %}
-            {{ (unit * price_150) | round(2) }}
-          {% else %}
-            {{ (150 * price_150) | round(2) }}
-          {% endif %}
+          {% set unit = states('sensor.monthly_energy_pea') | float(0) %}
+          {% set price = 3.2484 %}
+          {% set u = [unit, 150] | min %}
+          {{ (u * price) | round(2) }}
 
+      # 151–400 หน่วย (ส่วนที่เกิน 150 สูงสุด 250 หน่วย)
       - name: "Energy Cost 151-400 Unit"
+        unique_id: cost_151_400
+        unit_of_measurement: "THB"
+        icon: mdi:transmission-tower
+        state: >
+          {% set unit = states('sensor.monthly_energy_pea') | float(0) %}
+          {% set price = 4.2218 %}
+          {% set u = [ [unit - 150, 0] | max, 250 ] | min %}
+          {{ (u * price) | round(2) }}
+
+      # 400+ หน่วย (ส่วนที่เกิน 400)
+      - name: "Energy Cost 400+ Unit"
+        unique_id: cost_400_plus
+        unit_of_measurement: "THB"
+        icon: mdi:transmission-tower
+        state: >
+          {% set unit = states('sensor.monthly_energy_pea') | float(0) %}
+          {% set price = 4.4217 %}
+          {% set u = [unit - 400, 0] | max %}
+          {{ (u * price) | round(2) }}
+
+      # ✅ ทำ alias ให้ชื่อเดิมที่การ์ดคุณใช้อยู่ (กัน Entity not found)
+      - name: "Energy Cost 151-400 Unit (Alias)"
         unique_id: cost_250
         unit_of_measurement: "THB"
         icon: mdi:transmission-tower
-        state: >
-          {% set unit = states('sensor.monthly_energy') | float(0) %}
-          {% set price_250 = 4.2218 %}
-          {% if unit <= 150 %}
-            {{ 0 }}
-          {% elif unit <= 400 %}
-            {{ ((unit - 150) * price_250) | round(2) }}
-          {% else %}
-            {{ (250 * price_250) | round(2) }}
-          {% endif %}
+        state: "{{ states('sensor.cost_151_400') | float(0) | round(2) }}"
 
-      - name: "Energy Cost 400+ Unit"
+      - name: "Energy Cost 400+ Unit (Alias)"
         unique_id: cost_400
         unit_of_measurement: "THB"
         icon: mdi:transmission-tower
-        state: >
-          {% set unit = states('sensor.monthly_energy') | float(0) %}
-          {% set price_400 = 4.4217 %}
-          {% if unit < 400 %}
-            {{ 0 }}
-          {% else %}
-            {{ ((unit - 400) * price_400) | round(2) }}
-          {% endif %}
+        state: "{{ states('sensor.cost_400_plus') | float(0) | round(2) }}"
 
+      # ค่าไฟฐานรวม (ยังไม่รวมค่าบริการ/FT/VAT)
       - name: "Base Energy Cost"
         unique_id: base_cost
         unit_of_measurement: "THB"
         icon: mdi:cash-100
         state: >
           {% set c150 = states('sensor.cost_150') | float(0) %}
-          {% set c250 = states('sensor.cost_250') | float(0) %}
-          {% set c400 = states('sensor.cost_400') | float(0) %}
-          {{ (c150 + c250 + c400) | round(2) }}
+          {% set c2   = states('sensor.cost_151_400') | float(0) %}
+          {% set c3   = states('sensor.cost_400_plus') | float(0) %}
+          {{ (c150 + c2 + c3) | round(2) }}
 
+      # ✅ เพิ่มบรรทัด “ค่าไฟฐาน (รวมค่าบริการ)” แบบเดิม
       - name: "Base Energy Cost + Service Charge"
         unique_id: base_cost_services_charge
         unit_of_measurement: "THB"
@@ -81,37 +149,50 @@ template:
           {% set svc  = states('input_number.servicecharge') | float(0) %}
           {{ (base + svc) | round(2) }}
 
+      # ค่า FT (ตามรอบบิล PEA)
       - name: "FT Cost"
         unique_id: ft_cost
         unit_of_measurement: "THB"
         icon: mdi:flash
         state: >
-          {% set unit = states('sensor.monthly_energy') | float(0) %}
+          {% set unit = states('sensor.monthly_energy_pea') | float(0) %}
           {% set ft   = states('input_number.ftcharge') | float(0) %}
           {{ (unit * ft) | round(2) }}
 
+      # Sub Total (ค่าไฟฐาน + ค่าบริการ + FT)
+      - name: "Sub Total (Before VAT)"
+        unique_id: sub_total_before_vat
+        unit_of_measurement: "THB"
+        icon: mdi:cash-plus
+        state: >
+          {% set base_svc = states('sensor.base_cost_services_charge') | float(0) %}
+          {% set ftc      = states('sensor.ft_cost') | float(0) %}
+          {{ (base_svc + ftc) | round(2) }}
+
+      # VAT 7%
       - name: "VAT 7%"
         unique_id: vat_7_percent
         unit_of_measurement: "THB"
         icon: mdi:percent
         state: >
-          {% set a = states('sensor.base_cost_services_charge') | float(0) %}
-          {% set b = states('sensor.ft_cost') | float(0) %}
-          {{ ((a + b) * 0.07) | round(2) }}
+          {% set sub = states('sensor.sub_total_before_vat') | float(0) %}
+          {{ (sub * 0.07) | round(2) }}
 
+      # รวมสุทธิ
       - name: "Total Cost"
         unique_id: total_cost
         unit_of_measurement: "THB"
         icon: mdi:cash-check
         state: >
-          {% set a = states('sensor.base_cost_services_charge') | float(0) %}
-          {% set b = states('sensor.ft_cost') | float(0) %}
-          {% set v = states('sensor.vat_7_percent') | float(0) %}
-          {{ (a + b + v) | round(2) }}
+          {% set sub = states('sensor.sub_total_before_vat') | float(0) %}
+          {% set vat = states('sensor.vat_7_percent') | float(0) %}
+          {{ (sub + vat) | round(2) }}
 
 
 # =========================
-# Utility Meter (สะสมรายวัน/รายเดือน)
+# Utility Meter
+# - monthly_energy         = รอบปฏิทิน (1->สิ้นเดือน)
+# - monthly_energy_pea     = รอบบิล PEA (16->15)
 # =========================
 utility_meter:
   daily_energy:
@@ -125,7 +206,15 @@ utility_meter:
     source: sensor.esp32_pzem016_powermon_total_daily_energy
     cycle: monthly
     offset:
-      days: 1
+      days: 0
+      hours: 0
+      minutes: 0
+
+  monthly_energy_pea:
+    source: sensor.esp32_pzem016_powermon_total_daily_energy
+    cycle: monthly
+    offset:
+      days: 15
       hours: 0
       minutes: 0
 
@@ -146,6 +235,6 @@ input_number:
     name: FT Charge
     icon: mdi:flash
     min: 0
-    max: 100
+    max: 10
     step: 0.0001
     mode: box
