@@ -1,0 +1,49 @@
+type: entities
+title: 📊 ประวัติบิลค่าไฟย้อนหลัง (6 รอบบิล PEA)
+show_header_toggle: false
+entities:
+  - type: section
+    label: งวดล่าสุด → เก่าสุด
+  - entity: input_number.pea_bill_kwh_1
+    name: งวดที่ 1 (ล่าสุด) – หน่วยไฟ (kWh)
+    icon: mdi:counter
+  - entity: input_number.pea_bill_total_1
+    name: งวดที่ 1 (ล่าสุด) – ค่าไฟ (บาท)
+    icon: mdi:cash-check
+  - type: divider
+  - entity: input_number.pea_bill_kwh_2
+    name: งวดที่ 2 – หน่วยไฟ (kWh)
+    icon: mdi:counter
+  - entity: input_number.pea_bill_total_2
+    name: งวดที่ 2 – ค่าไฟ (บาท)
+    icon: mdi:cash-check
+  - type: divider
+  - entity: input_number.pea_bill_kwh_3
+    name: งวดที่ 3 – หน่วยไฟ (kWh)
+    icon: mdi:counter
+  - entity: input_number.pea_bill_total_3
+    name: งวดที่ 3 – ค่าไฟ (บาท)
+    icon: mdi:cash-check
+  - type: divider
+  - entity: input_number.pea_bill_kwh_4
+    name: งวดที่ 4 – หน่วยไฟ (kWh)
+    icon: mdi:counter
+  - entity: input_number.pea_bill_total_4
+    name: งวดที่ 4 – ค่าไฟ (บาท)
+    icon: mdi:cash-check
+  - type: divider
+  - entity: input_number.pea_bill_kwh_5
+    name: งวดที่ 5 – หน่วยไฟ (kWh)
+    icon: mdi:counter
+  - entity: input_number.pea_bill_total_5
+    name: งวดที่ 5 – ค่าไฟ (บาท)
+    icon: mdi:cash-check
+  - type: divider
+  - entity: input_number.pea_bill_kwh_6
+    name: งวดที่ 6 (เก่าสุด) – หน่วยไฟ (kWh)
+    icon: mdi:counter
+  - entity: input_number.pea_bill_total_6
+    name: งวดที่ 6 (เก่าสุด) – ค่าไฟ (บาท)
+    icon: mdi:cash-check
+grid_options:
+  columns: full
