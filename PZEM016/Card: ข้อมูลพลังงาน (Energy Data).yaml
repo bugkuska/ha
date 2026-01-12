@@ -1,0 +1,31 @@
+type: entities
+title: ข้อมูลพลังงาน (Energy Data)
+entities:
+  - entity: sensor.esp32_pzem016_powermon_voltage
+    name: แรงดันไฟฟ้า (V)
+    icon: mdi:alpha-v-circle-outline
+    secondary_info: last-updated
+  - entity: sensor.esp32_pzem016_powermon_current
+    name: กระแสไฟฟ้า (A)
+    icon: mdi:alpha-a-circle-outline
+    secondary_info: last-updated
+  - entity: sensor.esp32_pzem016_powermon_power
+    name: กำลังไฟฟ้า (W)
+    icon: mdi:flash
+    secondary_info: last-updated
+  - entity: sensor.esp32_pzem016_powermon_frequency
+    name: ความถี่ (Hz)
+    icon: mdi:sine-wave
+    secondary_info: last-updated
+  - entity: sensor.esp32_pzem016_powermon_power_factor
+    name: Power Factor
+    icon: mdi:chart-bell-curve
+    secondary_info: last-updated
+  - entity: sensor.esp32_pzem016_powermon_total_daily_energy
+    name: พลังงานสะสมวันนี้ (kWh)
+    icon: mdi:calendar-today
+    secondary_info: last-updated
+  - entity: sensor.monthly_energy_pea_display
+    name: พลังงานสะสมรอบบิล PEA (kWh)
+    icon: mdi:calendar-sync
+    secondary_info: last-changed
