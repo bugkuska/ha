@@ -1,0 +1,83 @@
+alias: PEA Roll History (6 cycles)
+description: >
+  เลื่อนประวัติค่าไฟย้อนหลัง 6 งวด (kWh และ Total)
+  แล้วบันทึกงวดล่าสุดเข้าช่องที่ 1 ทำงานคืนวันที่ 15 เวลา 23:59:50
+  (ก่อนตัดรอบวันที่ 16)
+triggers:
+  - trigger: time
+    at: "23:59:50"
+conditions:
+  - condition: template
+    value_template: "{{ now().day == 15 }}"
+actions:
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.pea_bill_kwh_6
+    data:
+      value: "{{ states('input_number.pea_bill_kwh_5') | float(0) }}"
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.pea_bill_kwh_5
+    data:
+      value: "{{ states('input_number.pea_bill_kwh_4') | float(0) }}"
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.pea_bill_kwh_4
+    data:
+      value: "{{ states('input_number.pea_bill_kwh_3') | float(0) }}"
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.pea_bill_kwh_3
+    data:
+      value: "{{ states('input_number.pea_bill_kwh_2') | float(0) }}"
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.pea_bill_kwh_2
+    data:
+      value: "{{ states('input_number.pea_bill_kwh_1') | float(0) }}"
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.pea_bill_total_6
+    data:
+      value: "{{ states('input_number.pea_bill_total_5') | float(0) }}"
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.pea_bill_total_5
+    data:
+      value: "{{ states('input_number.pea_bill_total_4') | float(0) }}"
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.pea_bill_total_4
+    data:
+      value: "{{ states('input_number.pea_bill_total_3') | float(0) }}"
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.pea_bill_total_3
+    data:
+      value: "{{ states('input_number.pea_bill_total_2') | float(0) }}"
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.pea_bill_total_2
+    data:
+      value: "{{ states('input_number.pea_bill_total_1') | float(0) }}"
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.pea_bill_kwh_1
+    data:
+      value: "{{ states('sensor.monthly_energy_pea') | float(0) | round(4) }}"
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.pea_bill_total_1
+    data:
+      value: "{{ states('sensor.total_cost') | float(0) | round(2) }}"
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.pea_prev_bill_kwh
+    data:
+      value: "{{ states('input_number.pea_bill_kwh_1') | float(0) | round(4) }}"
+  - action: input_number.set_value
+    target:
+      entity_id: input_number.pea_prev_bill_total
+    data:
+      value: "{{ states('input_number.pea_bill_total_1') | float(0) | round(2) }}"
+mode: single
