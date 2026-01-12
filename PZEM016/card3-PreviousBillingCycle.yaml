@@ -1,0 +1,11 @@
+type: entities
+title: บิลค่าไฟงวดที่ผ่านมา (Previous Billing Cycle)
+entities:
+  - entity: input_number.pea_prev_bill_kwh
+    name: การใช้ไฟฟ้างวดที่ผ่านมา (kWh)
+    icon: mdi:counter
+  - entity: input_number.pea_prev_bill_total
+    name: ค่าไฟรวมงวดที่ผ่านมา (บาท)
+    icon: mdi:cash-check
+grid_options:
+  columns: full
