@@ -1,0 +1,56 @@
+type: entities
+title: บิลค่าไฟ (Electricity Bill) - รอบบิล PEA
+entities:
+  - entity: sensor.pea_billing_period_th
+    name: ช่วงรอบบิล PEA
+    icon: mdi:calendar-range
+  - entity: sensor.monthly_energy_pea_display
+    name: การใช้ไฟฟ้ารอบบิล PEA (kWh)
+    icon: mdi:flash-outline
+  - type: section
+    label: ค่าไฟฟ้าตามขั้นหน่วย (รอบบิล PEA)
+  - entity: sensor.cost_150
+    name: ค่าไฟ 150 หน่วยแรก
+    icon: mdi:cash-100
+    secondary_info: last-updated
+  - entity: sensor.cost_250
+    name: ค่าไฟหน่วยที่ 151–400
+    icon: mdi:cash-100
+    secondary_info: last-updated
+  - entity: sensor.cost_400
+    name: ค่าไฟหน่วยที่ 400 ขึ้นไป
+    icon: mdi:cash-100
+    secondary_info: last-updated
+  - type: section
+    label: สรุปค่าใช้จ่าย (รอบบิล PEA)
+  - entity: sensor.base_cost
+    name: ค่าไฟฐาน (ตามขั้นหน่วย)
+    icon: mdi:cash
+    secondary_info: last-updated
+  - entity: input_number.servicecharge
+    name: ค่าบริการ
+    icon: mdi:cash-plus
+  - entity: sensor.base_cost_services_charge
+    name: ค่าไฟฐาน (รวมค่าบริการ)
+    icon: mdi:cash-100
+    secondary_info: last-updated
+  - entity: input_number.ftcharge
+    name: อัตราค่า FT (บาท/หน่วย)
+    icon: mdi:flash-outline
+  - entity: sensor.ft_cost
+    name: ค่า FT
+    icon: mdi:cash-100
+    secondary_info: last-updated
+  - entity: sensor.sub_total_before_vat
+    name: รวมก่อน VAT (ฐาน+บริการ+FT)
+    icon: mdi:cash-plus
+    secondary_info: last-updated
+  - entity: sensor.vat_7_percent
+    name: VAT 7%
+    icon: mdi:percent
+    secondary_info: last-updated
+  - type: divider
+  - entity: sensor.total_cost
+    name: รวมสุทธิ (Total) รอบบิล PEA
+    icon: mdi:cash-check
+    secondary_info: last-updated
