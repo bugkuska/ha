@@ -1,0 +1,9 @@
+alias: PZEM016 Send RAW Energy Data to n8n (Every 5 Minutes)
+description: |
+  ส่งข้อมูล PZEM016 ไปยัง n8n ผ่าน Webhook ทุก 5 นาที
+triggers:
+  - minutes: /5
+    trigger: time_pattern
+actions:
+  - action: rest_command.send_pzem016_raw_5m
+mode: single
