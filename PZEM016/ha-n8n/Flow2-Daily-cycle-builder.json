@@ -1,0 +1,887 @@
+{
+  "name": "Flow2-Daily-cycle-builder",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "hour": 0
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        -960,
+        -432
+      ],
+      "id": "a9c1ca5e-64b7-42bd-ab1f-81c93990a564",
+      "name": "CRON | Daily 00:00"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "77e20b42-38af-4fab-b61f-be0cf75389b0",
+              "name": "ts_midnight",
+              "value": "={{ DateTime.now().setZone('Asia/Bangkok').startOf('day').toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "39cd4802-63f7-4aac-98e4-92aa6d1c625c",
+              "name": "cycle_key",
+              "value": "={{ \"MSUSmartFarm|PZEM016|\" + DateTime.now().setZone('Asia/Bangkok').toFormat('yyyy-MM') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -736,
+        -432
+      ],
+      "id": "cc5fc696-fd0b-499c-b0ef-fc439f372e86",
+      "name": "SET | Build midnight row_key + cycle_key"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "1EU2z4oDA9TtLifjMSg3yWb5m8KUNISaxntUZcYImLfY",
+          "mode": "list",
+          "cachedResultName": "power_meter_logger",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1EU2z4oDA9TtLifjMSg3yWb5m8KUNISaxntUZcYImLfY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "energy_raw_5m",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1EU2z4oDA9TtLifjMSg3yWb5m8KUNISaxntUZcYImLfY/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "cycle_key",
+              "lookupValue": "={{ $json.cycle_key }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -512,
+        -432
+      ],
+      "id": "c6ca1ad5-b792-4872-82f8-140a2f434d7b",
+      "name": "GS | Lookup RAW @00:00",
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "credentials": {
+        "googleApi": {
+          "id": "HjMRmBLbJigs0y41",
+          "name": "Google Sheets account-ha-n8n-power-meter"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6fbe59a3-ad73-4f8e-b43c-8f1589f72fa2",
+              "leftValue": "={{ Object.keys($json || {}).length > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -64,
+        -432
+      ],
+      "id": "d8e6dd2b-fb5f-4877-bd83-7075a409d946",
+      "name": "IF | RAW Found?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "214cf1c9-1da6-4ac4-8b5c-71223ee2dfa2",
+              "name": "message",
+              "value": "no raw at midnight",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        160,
+        -336
+      ],
+      "id": "abf90f83-c427-482b-8603-b60ecea25ac1",
+      "name": "LOG | No RAW at midnight - Skipped"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "36f659b7-4ef4-49ee-9eb5-ac0c842d5faf",
+              "name": "billing_period",
+              "value": "={{ $json.billing_period || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "92c69781-7566-49dd-9c3d-9eca08aa18a5",
+              "name": "last_update_ts",
+              "value": "={{ $node[\"SET | Build midnight row_key + cycle_key\"].json.ts_midnight }}",
+              "type": "string"
+            },
+            {
+              "id": "f31fd199-0287-4724-9b06-1b4a83029073",
+              "name": "site",
+              "value": "={{ $json.site || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "52444298-72ac-4622-951d-980ece859405",
+              "name": "device",
+              "value": "={{ $json.device || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "3a27a771-5206-467d-9f85-56c6893bc996",
+              "name": "kwh_cycle",
+              "value": "={{ $json.kwh_cycle || 0 }} ",
+              "type": "string"
+            },
+            {
+              "id": "2fc166ad-df8e-4de1-b490-39929cb6d794",
+              "name": "base_cost",
+              "value": "={{ $json.base_cost || 0 }} ",
+              "type": "string"
+            },
+            {
+              "id": "d1fe8794-560f-4acd-a495-980d34215d81",
+              "name": "service_charge",
+              "value": "={{ $json.service_charge || 0 }} ",
+              "type": "string"
+            },
+            {
+              "id": "29a1ea3a-06ff-408a-a255-648967a679d0",
+              "name": "ft_rate",
+              "value": "={{ $json.ft_rate || 0 }} ",
+              "type": "string"
+            },
+            {
+              "id": "4c125016-eacd-4a33-8ef5-68e1f2e5b314",
+              "name": "ft_cost",
+              "value": "={{ $json.ft_cost || 0 }} ",
+              "type": "string"
+            },
+            {
+              "id": "38933773-74a9-4009-b8a8-5d64ea7eb5a8",
+              "name": "subtotal_before_vat",
+              "value": "={{ $json.subtotal_before_vat || 0 }} ",
+              "type": "string"
+            },
+            {
+              "id": "9e972da4-3018-49da-8bf5-1533221f6ab8",
+              "name": "vat_7_percent",
+              "value": "={{ $json.vat_7_percent || 0 }}",
+              "type": "string"
+            },
+            {
+              "id": "99b1ffdf-bfc2-4adc-8244-5efa8c23dda5",
+              "name": "total_cost",
+              "value": "={{ $json.total_cost || 0 }}",
+              "type": "string"
+            },
+            {
+              "id": "4a74f014-eb33-467e-a815-394d0fdab365",
+              "name": "cycle_key",
+              "value": "={{ $json.cycle_key || $node[\"SET | Build midnight row_key + cycle_key\"].json.cycle_key }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        160,
+        -528
+      ],
+      "id": "39eee026-69ab-4eb7-a2f1-6e9a987daf49",
+      "name": "SET | Build Cycle Summary Payload"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "1EU2z4oDA9TtLifjMSg3yWb5m8KUNISaxntUZcYImLfY",
+          "mode": "list",
+          "cachedResultName": "power_meter_logger",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1EU2z4oDA9TtLifjMSg3yWb5m8KUNISaxntUZcYImLfY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 919573753,
+          "mode": "list",
+          "cachedResultName": "pea_cycle_summary",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1EU2z4oDA9TtLifjMSg3yWb5m8KUNISaxntUZcYImLfY/edit#gid=919573753"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "cycle_key",
+              "lookupValue": "={{ $json.cycle_key }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        384,
+        -528
+      ],
+      "id": "3bc57bf9-fc9a-4d3c-8a74-eba002557b3f",
+      "name": "GS | Find Cycle Row",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleApi": {
+          "id": "HjMRmBLbJigs0y41",
+          "name": "Google Sheets account-ha-n8n-power-meter"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3af957ce-8918-4946-8bad-260d02081f8f",
+              "leftValue": "={{ $json.cycle_exists }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        832,
+        -528
+      ],
+      "id": "3d6804eb-b3d4-4837-9674-9977fd65a945",
+      "name": "IF | Cycle Exists?",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1EU2z4oDA9TtLifjMSg3yWb5m8KUNISaxntUZcYImLfY",
+          "mode": "list",
+          "cachedResultName": "power_meter_logger",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1EU2z4oDA9TtLifjMSg3yWb5m8KUNISaxntUZcYImLfY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 919573753,
+          "mode": "list",
+          "cachedResultName": "pea_cycle_summary",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1EU2z4oDA9TtLifjMSg3yWb5m8KUNISaxntUZcYImLfY/edit#gid=919573753"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "cycle_key": "={{ $json.cycle_key }}",
+            "billing_period": "={{ $json.billing_period }}",
+            "last_update_ts": "={{ $json.last_update_ts }}",
+            "site": "={{ $json.site }}",
+            "device": "={{ $json.device }}",
+            "kwh_cycle": "={{ $json.kwh_cycle }}",
+            "base_cost": "={{ $json.base_cost }}",
+            "service_charge": "={{ $json.service_charge }}",
+            "ft_rate": "={{ $json.ft_rate }}",
+            "ft_cost": "={{ $json.ft_cost }}",
+            "subtotal_before_vat": "={{ $json.subtotal_before_vat }}",
+            "vat_7_percent": "={{ $json.vat_7_percent }}",
+            "total_cost": "={{ $json.total_cost }}",
+            "row_number": "={{ Number($json.row_number) }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "billing_period",
+              "displayName": "billing_period",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "last_update_ts",
+              "displayName": "last_update_ts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "site",
+              "displayName": "site",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "device",
+              "displayName": "device",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "kwh_cycle",
+              "displayName": "kwh_cycle",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "base_cost",
+              "displayName": "base_cost",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "service_charge",
+              "displayName": "service_charge",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ft_rate",
+              "displayName": "ft_rate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ft_cost",
+              "displayName": "ft_cost",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "subtotal_before_vat",
+              "displayName": "subtotal_before_vat",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "vat_7_percent",
+              "displayName": "vat_7_percent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "total_cost",
+              "displayName": "total_cost",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "cycle_key",
+              "displayName": "cycle_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1056,
+        -624
+      ],
+      "id": "bb68c768-db8c-4461-aa5b-0932bedac6b9",
+      "name": "GS | Update Cycle Summary",
+      "credentials": {
+        "googleApi": {
+          "id": "HjMRmBLbJigs0y41",
+          "name": "Google Sheets account-ha-n8n-power-meter"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1EU2z4oDA9TtLifjMSg3yWb5m8KUNISaxntUZcYImLfY",
+          "mode": "list",
+          "cachedResultName": "power_meter_logger",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1EU2z4oDA9TtLifjMSg3yWb5m8KUNISaxntUZcYImLfY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 919573753,
+          "mode": "list",
+          "cachedResultName": "pea_cycle_summary",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1EU2z4oDA9TtLifjMSg3yWb5m8KUNISaxntUZcYImLfY/edit#gid=919573753"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "billing_period": "={{ $json.billing_period }}",
+            "last_update_ts": "={{ $json.last_update_ts }}",
+            "device": "={{ $json.device }}",
+            "kwh_cycle": "={{ $json.kwh_cycle }}",
+            "service_charge": "={{ $json.service_charge }}",
+            "subtotal_before_vat": "={{ $json.subtotal_before_vat }}",
+            "vat_7_percent": "={{ $json.vat_7_percent }}",
+            "site": "={{ $json.site }}",
+            "ft_rate": "={{ $json.ft_rate }}",
+            "ft_cost": "={{ $json.ft_cost }}",
+            "total_cost": "={{ $json.total_cost }}",
+            "base_cost": "={{ $json.base_cost }}",
+            "cycle_key": "={{ $json.cycle_key }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "billing_period",
+              "displayName": "billing_period",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_update_ts",
+              "displayName": "last_update_ts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "site",
+              "displayName": "site",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "device",
+              "displayName": "device",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "kwh_cycle",
+              "displayName": "kwh_cycle",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "base_cost",
+              "displayName": "base_cost",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "service_charge",
+              "displayName": "service_charge",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ft_rate",
+              "displayName": "ft_rate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ft_cost",
+              "displayName": "ft_cost",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "subtotal_before_vat",
+              "displayName": "subtotal_before_vat",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "vat_7_percent",
+              "displayName": "vat_7_percent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "total_cost",
+              "displayName": "total_cost",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "cycle_key",
+              "displayName": "cycle_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1056,
+        -432
+      ],
+      "id": "45f70956-d059-4bd3-b1fd-7df547c86d34",
+      "name": "GS | Append Cycle Summary",
+      "credentials": {
+        "googleApi": {
+          "id": "HjMRmBLbJigs0y41",
+          "name": "Google Sheets account-ha-n8n-power-meter"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nitems.sort((a,b) => (b.json.ts||'').localeCompare(a.json.ts||''));\nreturn items.slice(0,1);\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -288,
+        -432
+      ],
+      "id": "61553747-8d96-418d-a85e-616edbeb6589",
+      "name": "CODE | Select Latest RAW"
+    },
+    {
+      "parameters": {
+        "jsCode": "// CODE | Merge Find + Payload (FINAL - stable)\n// Purpose:\n// - Merge payload (from \"SET | Build Cycle Summary Payload\") with lookup result\n//   (from \"GS | Find Cycle Row\") that may be empty.\n// - Always output a single item with full payload fields.\n// - Add cycle_exists boolean.\n// - If cycle exists, attach row_number as a NUMBER for Google Sheets Update Row.\n\nconst payload = $node[\"SET | Build Cycle Summary Payload\"]?.json || {};\nconst found = $json || {}; // input from \"GS | Find Cycle Row\" (may be empty)\n\n// Detect whether the cycle row exists in summary sheet\nconst cycleExists = Object.keys(found || {}).length > 0;\n\n// Try to get row number from possible keys returned by Google Sheets node\nconst rawRowNumber =\n  found.row_number ??\n  found.rowNumber ??\n  found.rowIndex ??\n  null;\n\n// Build merged object (payload first, then found)\nconst merged = {\n  ...payload,\n  ...found,\n  cycle_exists: cycleExists,\n};\n\n// If exists, ensure row_number is a real number (Update Row needs a number)\nif (cycleExists) {\n  merged.row_number = Number(rawRowNumber);\n  // Optional offset handling:\n  // If you discover it updates the wrong row, change +0 to +1\n  // merged.row_number = Number(rawRowNumber) + 0;\n}\n\n// Safety fallbacks (optional, prevents undefined in rare edge cases)\nif (!merged.cycle_key && $node[\"SET | Build midnight row_key + cycle_key\"]?.json?.cycle_key) {\n  merged.cycle_key = $node[\"SET | Build midnight row_key + cycle_key\"].json.cycle_key;\n}\nif (!merged.last_update_ts && $node[\"SET | Build midnight row_key + cycle_key\"]?.json?.ts_midnight) {\n  merged.last_update_ts = $node[\"SET | Build midnight row_key + cycle_key\"].json.ts_midnight;\n}\n\nreturn [{ json: merged }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        -528
+      ],
+      "id": "8620c634-af02-411e-b327-656352d97f14",
+      "name": "CODE | Merge Find + Payload"
+    },
+    {
+      "parameters": {
+        "content": "## 🌙 Flow 2 : Daily Cycle Builder (อัปเดตสรุปรายวัน / รอบบิล)",
+        "height": 464,
+        "width": 2320,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1064,
+        -640
+      ],
+      "typeVersion": 1,
+      "id": "5c0e3972-e35c-4cd4-bc03-f7e2d8d3de62",
+      "name": "Sticky Note1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "CRON | Daily 00:00": {
+      "main": [
+        [
+          {
+            "node": "SET | Build midnight row_key + cycle_key",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SET | Build midnight row_key + cycle_key": {
+      "main": [
+        [
+          {
+            "node": "GS | Lookup RAW @00:00",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GS | Lookup RAW @00:00": {
+      "main": [
+        [
+          {
+            "node": "CODE | Select Latest RAW",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF | RAW Found?": {
+      "main": [
+        [
+          {
+            "node": "SET | Build Cycle Summary Payload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LOG | No RAW at midnight - Skipped",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SET | Build Cycle Summary Payload": {
+      "main": [
+        [
+          {
+            "node": "GS | Find Cycle Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GS | Find Cycle Row": {
+      "main": [
+        [
+          {
+            "node": "CODE | Merge Find + Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF | Cycle Exists?": {
+      "main": [
+        [
+          {
+            "node": "GS | Update Cycle Summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "GS | Append Cycle Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CODE | Select Latest RAW": {
+      "main": [
+        [
+          {
+            "node": "IF | RAW Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CODE | Merge Find + Payload": {
+      "main": [
+        [
+          {
+            "node": "IF | Cycle Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "b8921664-39f4-4a05-a976-05ae7753abcb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6e8bd4e6dcfe2d257f6d9648f4efaf76882daef04e1402d554d9aae9132bba97"
+  },
+  "id": "j5zUMrt6r6mFJRpm",
+  "tags": []
+}

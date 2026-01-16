@@ -1,0 +1,535 @@
+{
+  "name": "Flow1-log5min",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ha-pzem016-raw-5m",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -960,
+        -944
+      ],
+      "id": "feb321b4-7bb7-470d-bdc1-7f94fbb615a6",
+      "name": "Webhook",
+      "webhookId": "d4afef11-2be1-434d-8c9b-d8dbbf982235"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d771b20e-f16a-4dae-80e2-62771b1bbe8b",
+              "name": "ts_5m",
+              "value": "={{ (() => {\n  const d = new Date($json.body.timestamp);\n  d.setSeconds(0,0);\n  d.setMinutes(Math.floor(d.getMinutes()/5)*5);\n  return d.toISOString();\n})() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -736,
+        -944
+      ],
+      "id": "09fc290d-3906-4fd7-ac67-9ce8fe86e3cf",
+      "name": "SET | Build ts_5m"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "95e8e88a-756f-494a-bdbe-9800cae76389",
+              "name": "row_key",
+              "value": "={{ $json.body.device + \"_\" + $json.ts_5m }}",
+              "type": "string"
+            },
+            {
+              "id": "00913d25-5f39-46fd-be24-d2a889e786b6",
+              "name": "cycle_key",
+              "value": "={{ $node[\"Webhook\"].json.body.site + \"|\" + $node[\"Webhook\"].json.body.device + \"|\" + $node[\"SET | Build ts_5m\"].json.ts_5m.slice(0,7) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -512,
+        -944
+      ],
+      "id": "a3daa2fb-4502-4da8-a375-ca7bdb9efb18",
+      "name": "SET | Build row_key + cycle_key",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "1EU2z4oDA9TtLifjMSg3yWb5m8KUNISaxntUZcYImLfY",
+          "mode": "list",
+          "cachedResultName": "power_meter_logger",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1EU2z4oDA9TtLifjMSg3yWb5m8KUNISaxntUZcYImLfY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "energy_raw_5m",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1EU2z4oDA9TtLifjMSg3yWb5m8KUNISaxntUZcYImLfY/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "row_key",
+              "lookupValue": "={{ $json.row_key }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -288,
+        -944
+      ],
+      "id": "0333db58-b305-4d0a-8c2e-94b82487a746",
+      "name": "GS | Check RAW Duplicate",
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "credentials": {
+        "googleApi": {
+          "id": "HjMRmBLbJigs0y41",
+          "name": "Google Sheets account-ha-n8n-power-meter"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6fbe59a3-ad73-4f8e-b43c-8f1589f72fa2",
+              "leftValue": "={{ $items(\"GS | Check RAW Duplicate\").length > 0 && Object.keys($items(\"GS | Check RAW Duplicate\")[0].json || {}).length > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -64,
+        -944
+      ],
+      "id": "01387873-a4e3-40b7-9e35-68a165514261",
+      "name": "IF | RAW Exists?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "214cf1c9-1da6-4ac4-8b5c-71223ee2dfa2",
+              "name": "message",
+              "value": "duplicate skipped",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        160,
+        -1040
+      ],
+      "id": "11e928ed-23a6-45f4-bd3d-617184acf4ab",
+      "name": "LOG | RAW Duplicate - Skipped"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1EU2z4oDA9TtLifjMSg3yWb5m8KUNISaxntUZcYImLfY",
+          "mode": "list",
+          "cachedResultName": "power_meter_logger",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1EU2z4oDA9TtLifjMSg3yWb5m8KUNISaxntUZcYImLfY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "energy_raw_5m",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1EU2z4oDA9TtLifjMSg3yWb5m8KUNISaxntUZcYImLfY/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ts": "={{$node[\"Webhook\"].json.body.timestamp}}",
+            "site": "={{$node[\"Webhook\"].json.body.site}}",
+            "device": "={{$node[\"Webhook\"].json.body.device}}",
+            "billing_period": "={{$node[\"Webhook\"].json.body.billing_period}}",
+            "kwh_cycle": "={{$node[\"Webhook\"].json.body.kwh_cycle}}",
+            "voltage_v": "={{$node[\"Webhook\"].json.body.voltage_v}}",
+            "current_a": "={{$node[\"Webhook\"].json.body.current_a}}",
+            "power_w": "={{$node[\"Webhook\"].json.body.power_w}}",
+            "frequency_hz": "={{$node[\"Webhook\"].json.body.frequency_hz}}",
+            "power_factor": "={{$node[\"Webhook\"].json.body.power_factor}}",
+            "kwh_today": "={{$node[\"Webhook\"].json.body.kwh_today}}",
+            "row_key": "={{ $node[\"SET | Build row_key + cycle_key\"].json.row_key }}",
+            "ts_5m": "={{ $node[\"SET | Build ts_5m\"].json.ts_5m }}",
+            "cycle_key": "={{ $node[\"SET | Build row_key + cycle_key\"].json.cycle_key }}",
+            "base_cost": "={{ $node[\"Webhook\"].json.body.base_cost }}",
+            "service_charge": "={{ $node[\"Webhook\"].json.body.service_charge }}",
+            "ft_rate": "={{ $node[\"Webhook\"].json.body.ft_rate }}",
+            "ft_cost": "={{ $node[\"Webhook\"].json.body.ft_cost }}",
+            "subtotal_before_vat": "={{ $node[\"Webhook\"].json.body.subtotal_before_vat }}",
+            "vat_7_percent": "={{ $node[\"Webhook\"].json.body.vat_7_percent }}",
+            "total_cost": "={{ $node[\"Webhook\"].json.body.total_cost }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ts",
+              "displayName": "ts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "site",
+              "displayName": "site",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "device",
+              "displayName": "device",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "billing_period",
+              "displayName": "billing_period",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "kwh_cycle",
+              "displayName": "kwh_cycle",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "voltage_v",
+              "displayName": "voltage_v",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "current_a",
+              "displayName": "current_a",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "power_w",
+              "displayName": "power_w",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "frequency_hz",
+              "displayName": "frequency_hz",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "power_factor",
+              "displayName": "power_factor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "kwh_today",
+              "displayName": "kwh_today",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_key",
+              "displayName": "row_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ts_5m",
+              "displayName": "ts_5m",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "cycle_key",
+              "displayName": "cycle_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "base_cost",
+              "displayName": "base_cost",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "service_charge",
+              "displayName": "service_charge",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ft_rate",
+              "displayName": "ft_rate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ft_cost",
+              "displayName": "ft_cost",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "subtotal_before_vat",
+              "displayName": "subtotal_before_vat",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "vat_7_percent",
+              "displayName": "vat_7_percent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "total_cost",
+              "displayName": "total_cost",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        160,
+        -848
+      ],
+      "id": "329826fd-59ce-4a02-888c-c206cd0a448f",
+      "name": "GS | Append Energy RAW (5m)",
+      "credentials": {
+        "googleApi": {
+          "id": "HjMRmBLbJigs0y41",
+          "name": "Google Sheets account-ha-n8n-power-meter"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 🔁  Flow 1 : RAW Logger (บันทึกข้อมูลทุก 5 นาที)",
+        "height": 464,
+        "width": 2320,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1024,
+        -1120
+      ],
+      "typeVersion": 1,
+      "id": "ccb5215f-75cf-481f-8ff2-d7a34e6a02cc",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "SET | Build ts_5m",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SET | Build ts_5m": {
+      "main": [
+        [
+          {
+            "node": "SET | Build row_key + cycle_key",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SET | Build row_key + cycle_key": {
+      "main": [
+        [
+          {
+            "node": "GS | Check RAW Duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GS | Check RAW Duplicate": {
+      "main": [
+        [
+          {
+            "node": "IF | RAW Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF | RAW Exists?": {
+      "main": [
+        [
+          {
+            "node": "LOG | RAW Duplicate - Skipped",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "GS | Append Energy RAW (5m)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "12e01d12-e00f-476b-9033-f66168afc011",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6e8bd4e6dcfe2d257f6d9648f4efaf76882daef04e1402d554d9aae9132bba97"
+  },
+  "id": "rpPskJl5dcup1b3U",
+  "tags": []
+}

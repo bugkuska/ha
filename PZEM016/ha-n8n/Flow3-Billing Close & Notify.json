@@ -1,0 +1,369 @@
+{
+  "name": "Flow3-Billing Close & Notify",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "custom",
+              "cronExpression": "5 0 15 * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        -976,
+        80
+      ],
+      "id": "d4beb8f4-11b4-47ea-ac87-e75eba761f7d",
+      "name": "CRON | Monthly 15th 00:05"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "1EU2z4oDA9TtLifjMSg3yWb5m8KUNISaxntUZcYImLfY",
+          "mode": "list",
+          "cachedResultName": "power_meter_logger",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1EU2z4oDA9TtLifjMSg3yWb5m8KUNISaxntUZcYImLfY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 919573753,
+          "mode": "list",
+          "cachedResultName": "pea_cycle_summary",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1EU2z4oDA9TtLifjMSg3yWb5m8KUNISaxntUZcYImLfY/edit#gid=919573753"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "cycle_key",
+              "lookupValue": "={{ $json.cycle_key }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -528,
+        80
+      ],
+      "id": "73d92568-7eed-49ed-8a20-4aeb3a864bf8",
+      "name": "GS | Find Cycle Summary",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleApi": {
+          "id": "HjMRmBLbJigs0y41",
+          "name": "Google Sheets account-ha-n8n-power-meter"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3af957ce-8918-4946-8bad-260d02081f8f",
+              "leftValue": "={{ !!$items(\"GS | Find Cycle Summary\")[0]?.json?.row_number }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -304,
+        80
+      ],
+      "id": "50560e34-7b38-47b9-bcf3-d1d2cf13aa90",
+      "name": "IF | Summary Exists?",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "214cf1c9-1da6-4ac4-8b5c-71223ee2dfa2",
+              "name": "message",
+              "value": "no summary row for cycle_key",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -80,
+        176
+      ],
+      "id": "01851978-20fa-4f43-9508-716420dadb1f",
+      "name": "LOG | No Summary Row - Skipped"
+    },
+    {
+      "parameters": {
+        "jsCode": "const row = $json;\n\nreturn [{\n  cycle_key: row.cycle_key,\n  billing_period_th: row.billing_period,   // ✔️ ชื่อจริง\n  energy_kwh: Number(row.kwh_cycle || 0),  // ✔️\n  base_cost: Number(row.base_cost || 0),\n  ft_cost: Number(row.ft_cost || 0),\n  service_cost: Number(row.service_charge || 0), // ✔️\n  vat_cost: Number(row.vat_7_percent || 0),      // ✔️\n  total_cost: Number(row.total_cost || 0),\n  generated_at: new Date().toISOString()\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        -16
+      ],
+      "id": "9a34ce19-2ef0-4a14-84a0-221417fbe19d",
+      "name": "Code | Build Report Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json;\n\nconst html = `\n<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"utf-8\" />\n  <style>\n    body { font-family: Arial, sans-serif; }\n    table { width: 100%; border-collapse: collapse; }\n    th, td { border: 1px solid #ddd; padding: 8px; }\n    th { background: #f4f4f4; }\n  </style>\n</head>\n<body>\n  <h2>รายงานสรุปค่าไฟฟ้า</h2>\n  <p>รอบบิล: <b>${d.billing_period_th}</b></p>\n\n  <table>\n    <tr><th>พลังงาน (kWh)</th><td>${d.energy_kwh}</td></tr>\n    <tr><th>ค่าไฟฐาน</th><td>${d.base_cost.toFixed(2)}</td></tr>\n    <tr><th>ค่า FT</th><td>${d.ft_cost.toFixed(2)}</td></tr>\n    <tr><th>ค่าบริการ</th><td>${d.service_cost.toFixed(2)}</td></tr>\n    <tr><th>VAT</th><td>${d.vat_cost.toFixed(2)}</td></tr>\n    <tr><th><b>รวมทั้งสิ้น</b></th><td><b>${d.total_cost.toFixed(2)}</b></td></tr>\n  </table>\n\n  <p>สร้างเมื่อ: ${new Date(d.generated_at).toLocaleString()}</p>\n</body>\n</html>\n`;\n\nreturn [{ html }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        80
+      ],
+      "id": "ca5529fb-6dbd-41a4-9cd0-6d720b81d5e6",
+      "name": "Code | Build HTML Template"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = new Date();\nconst ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;\n\nreturn [{\n  site: 'MSUSmartFarm',\n  device: 'PZEM016',\n  cycle_key: `MSUSmartFarm|PZEM016|${ym}`\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -752,
+        80
+      ],
+      "id": "c87e0ec8-3a3f-49ed-a6ca-d219b5c196c3",
+      "name": "Code | Build cycle_key (closing)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $json;\n\nconst message =\n`📊 สรุปค่าไฟฟ้ารายเดือน\nรอบบิล: ${d.billing_period_th}\n\n⚡ พลังงานไฟฟ้า: ${d.energy_kwh.toFixed(4)} kWh\n💰 ค่าไฟฐาน: ${d.base_cost.toFixed(2)} บาท\n🔁 ค่า FT: ${d.ft_cost.toFixed(2)} บาท\n🧾 ค่าบริการ: ${d.service_cost.toFixed(2)} บาท\n🧮 VAT: ${d.vat_cost.toFixed(2)} บาท\n\n✅ รวมทั้งสิ้น: ${d.total_cost.toFixed(2)} บาท`;\n\nreturn [{ message }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        -112
+      ],
+      "id": "60206527-9c3e-4584-b0ee-d7d713196fea",
+      "name": "Code | Build LINE Message"
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.message }}",
+        "replyToken": "=",
+        "targetRecipient": "={{ $('Set (LINE Target)').item.json.toId }}"
+      },
+      "type": "n8n-nodes-linewebhook.LineMessaging",
+      "typeVersion": 1,
+      "position": [
+        816,
+        -112
+      ],
+      "id": "e6b39750-2bdd-4baa-bb32-3cc40c44b3b4",
+      "name": "LineMessaging-SendMessage",
+      "credentials": {
+        "lineMessagingAuthApi": {
+          "id": "WT3wCk9QTNKg04ul",
+          "name": "Line-Message-PEA-Summary-Noti"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "toId",
+              "value": "=U75423c4a49a67c07bfb2852e7389d6ff"
+            },
+            {
+              "name": "message",
+              "value": "={{ $json.message }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set (LINE Target)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        368,
+        -112
+      ],
+      "id": "f0603b4e-efad-4af8-bd36-8bae02177f49",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.message }}"
+      },
+      "type": "n8n-nodes-linewebhook.LineMessageNode",
+      "typeVersion": 1,
+      "position": [
+        592,
+        -112
+      ],
+      "id": "c6269f52-8623-4adf-ba44-a3fb37653995",
+      "name": "LineMessageNode"
+    },
+    {
+      "parameters": {
+        "content": "## 📣 Flow 3 : Billing Close & Notify (ปิดรอบบิล + แจ้งเตือน)",
+        "height": 512,
+        "width": 2320,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1192,
+        -176
+      ],
+      "typeVersion": 1,
+      "id": "541e1c6a-9fe4-431d-a9ad-d1e48c21c4fc",
+      "name": "Sticky Note2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "CRON | Monthly 15th 00:05": {
+      "main": [
+        [
+          {
+            "node": "Code | Build cycle_key (closing)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GS | Find Cycle Summary": {
+      "main": [
+        [
+          {
+            "node": "IF | Summary Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF | Summary Exists?": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Report Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LOG | No Summary Row - Skipped",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Report Data": {
+      "main": [
+        [
+          {
+            "node": "Code | Build LINE Message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code | Build HTML Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build cycle_key (closing)": {
+      "main": [
+        [
+          {
+            "node": "GS | Find Cycle Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build LINE Message": {
+      "main": [
+        [
+          {
+            "node": "Set (LINE Target)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set (LINE Target)": {
+      "main": [
+        [
+          {
+            "node": "LineMessageNode",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LineMessageNode": {
+      "main": [
+        [
+          {
+            "node": "LineMessaging-SendMessage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "fec0a25f-4494-4983-9887-2d97dbb4eeed",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6e8bd4e6dcfe2d257f6d9648f4efaf76882daef04e1402d554d9aae9132bba97"
+  },
+  "id": "BnMCLFcZJU8MtiDb",
+  "tags": []
+}
